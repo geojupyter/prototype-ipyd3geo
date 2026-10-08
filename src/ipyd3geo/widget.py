@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 import json
 import pathlib
+import warnings
 from typing import TYPE_CHECKING
 
 import anywidget
@@ -237,7 +238,12 @@ class Map(anywidget.AnyWidget):
                 if layer["has_filters"]:
                     pass
             else:
-                pass
+                msg = (
+                    f"Skipping layer {layer['name']} of type {layer['type']} "
+                    f"and source type {layer['source_type']} because it is not "
+                    "yet implemented."
+                )
+                warnings.warn(msg, stacklevel=2)
 
     def remove(self, layer: Layer) -> None:
         """Remove a layer from the map.
