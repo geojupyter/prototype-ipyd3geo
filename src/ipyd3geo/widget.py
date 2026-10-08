@@ -236,7 +236,11 @@ class Map(anywidget.AnyWidget):
             ):
                 self.add(GeoJSON(data, name=layer["name"], style=style))
                 if layer["has_filters"]:
-                    pass
+                    warnings.warn(
+                        f"Layer {layer['name']} has filters applied, but these are "
+                        "not yet supported and will be ignored.",
+                        stacklevel=2,
+                    )
             else:
                 msg = (
                     f"Skipping layer {layer['name']} of type {layer['type']} "
