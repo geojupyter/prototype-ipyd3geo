@@ -212,12 +212,12 @@ class Map(anywidget.AnyWidget):
 
         Args:
             jgis (pathlib.Path or str): The path to the .jGIS file.
+            layers (list or str, optional): The names of the layers to add.
+                If None, all compatible layers will be added. Defaults to None.
             style (VectorStyle, optional): The style to apply to all layers. If None,
                 the default style will be used. Defaults to None. Note that pulling
                 a style from the .jGIS file is not supported yet, so this is the only
                 way to style layers from a .jGIS file.
-            layers (list or str, optional): The names of the layers to add.
-                If None, all compatible layers will be added. Defaults to None.
         """
         if isinstance(layers, str):
             layers = [layers]
