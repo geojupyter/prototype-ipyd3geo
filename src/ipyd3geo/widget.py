@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 import anywidget
 import traitlets
 
+from .jgis import read_layers
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
@@ -198,6 +200,37 @@ class Map(anywidget.AnyWidget):
     def add(self, layer: Layer) -> None:
         """Add a layer to the map. Only GeoJSON layers are supported so far."""
         self.layers = [*self.layers, layer.data]
+
+    def add_from_jgis(
+        self, jgis: pathlib.Path | str, layers: list | str | None = None
+    ) -> None:
+        """Add all compatible layers from a .jGIS file to the map.
+
+        Args:
+            jgis (pathlib.Path or str): The path to the .jGIS file.
+            layers (list or str, optional): The names of the layers to add.
+                If None, all layers will be added.
+                Defaults to None. **Not implemented yet.**
+        """
+        if layers is not None:
+            raise NotImplementedError
+        layers_info = read_layers(jgis)
+        for layer in layers_info:
+            if not layer["visible"]:
+                continue
+            data = layer["data"] if layer["data"] is not None else layer["path"]
+            # URLs come back as str and aren't supported yet; local paths are Paths.
+            if (
+                layer["type"] == "VectorLayer"
+                and layer["source_type"] == "GeoJSONSource"
+                and data is not None
+                and not isinstance(data, str)
+            ):
+                self.add(GeoJSON(data, name=layer["name"]))
+                if layer["has_filters"]:
+                    pass
+            else:
+                pass
 
     def remove(self, layer: Layer) -> None:
         """Remove a layer from the map.
