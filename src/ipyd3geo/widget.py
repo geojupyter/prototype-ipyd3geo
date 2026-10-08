@@ -217,13 +217,14 @@ class Map(anywidget.AnyWidget):
                 a style from the .jGIS file is not supported yet, so this is the only
                 way to style layers from a .jGIS file.
             layers (list or str, optional): The names of the layers to add.
-                If None, all layers will be added.
-                Defaults to None. **Not implemented yet.**
+                If None, all compatible layers will be added. Defaults to None.
         """
-        if layers is not None:
-            raise NotImplementedError
+        if isinstance(layers, str):
+            layers = [layers]
         layers_info = read_layers(jgis)
         for layer in layers_info:
+            if layers is not None and layer["name"] not in layers:
+                continue
             if not layer["visible"]:
                 continue
             # Remote sources (layer["url"]) aren't supported yet.
