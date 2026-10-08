@@ -5,10 +5,13 @@ from __future__ import annotations
 import inspect
 import json
 import pathlib
+import warnings
 from typing import TYPE_CHECKING
 
 import anywidget
 import traitlets
+
+from .jgis import read_layers
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -198,6 +201,53 @@ class Map(anywidget.AnyWidget):
     def add(self, layer: Layer) -> None:
         """Add a layer to the map. Only GeoJSON layers are supported so far."""
         self.layers = [*self.layers, layer.data]
+
+    def add_from_jgis(
+        self,
+        jgis: pathlib.Path | str,
+        layers: list | str | None = None,
+        style: VectorStyle | None = None,
+    ) -> None:
+        """Add all compatible layers from a .jGIS file to the map.
+
+        Args:
+            jgis (pathlib.Path or str): The path to the .jGIS file.
+            layers (list or str, optional): The names of the layers to add.
+                If None, all compatible layers will be added. Defaults to None.
+            style (VectorStyle, optional): The style to apply to all layers. If None,
+                the default style will be used. Defaults to None. Note that pulling
+                a style from the .jGIS file is not supported yet, so this is the only
+                way to style layers from a .jGIS file.
+        """
+        if isinstance(layers, str):
+            layers = [layers]
+        layers_info = read_layers(jgis)
+        for layer in layers_info:
+            if layers is not None and layer["name"] not in layers:
+                continue
+            if not layer["visible"]:
+                continue
+            # Remote sources (layer["url"]) aren't supported yet.
+            data = layer["data"] if layer["data"] is not None else layer["path"]
+            if (
+                layer["type"] == "VectorLayer"
+                and layer["source_type"] == "GeoJSONSource"
+                and data is not None
+            ):
+                self.add(GeoJSON(data, name=layer["name"], style=style))
+                if layer["has_filters"]:
+                    warnings.warn(
+                        f"Layer {layer['name']} has filters applied, but these are "
+                        "not yet supported and will be ignored.",
+                        stacklevel=2,
+                    )
+            else:
+                msg = (
+                    f"Skipping layer {layer['name']} of type {layer['type']} "
+                    f"and source type {layer['source_type']} because it is not "
+                    "yet implemented."
+                )
+                warnings.warn(msg, stacklevel=2)
 
     def remove(self, layer: Layer) -> None:
         """Remove a layer from the map.
