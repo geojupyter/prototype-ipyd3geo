@@ -202,12 +202,19 @@ class Map(anywidget.AnyWidget):
         self.layers = [*self.layers, layer.data]
 
     def add_from_jgis(
-        self, jgis: pathlib.Path | str, layers: list | str | None = None
+        self,
+        jgis: pathlib.Path | str,
+        layers: list | str | None = None,
+        style: VectorStyle | None = None,
     ) -> None:
         """Add all compatible layers from a .jGIS file to the map.
 
         Args:
             jgis (pathlib.Path or str): The path to the .jGIS file.
+            style (VectorStyle, optional): The style to apply to all layers. If None,
+                the default style will be used. Defaults to None. Note that pulling
+                a style from the .jGIS file is not supported yet, so this is the only
+                way to style layers from a .jGIS file.
             layers (list or str, optional): The names of the layers to add.
                 If None, all layers will be added.
                 Defaults to None. **Not implemented yet.**
@@ -226,7 +233,7 @@ class Map(anywidget.AnyWidget):
                 and data is not None
                 and not isinstance(data, str)
             ):
-                self.add(GeoJSON(data, name=layer["name"]))
+                self.add(GeoJSON(data, name=layer["name"], style=style))
                 if layer["has_filters"]:
                     pass
             else:
