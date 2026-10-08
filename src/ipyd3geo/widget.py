@@ -226,13 +226,12 @@ class Map(anywidget.AnyWidget):
         for layer in layers_info:
             if not layer["visible"]:
                 continue
+            # Remote sources (layer["url"]) aren't supported yet.
             data = layer["data"] if layer["data"] is not None else layer["path"]
-            # URLs come back as str and aren't supported yet; local paths are Paths.
             if (
                 layer["type"] == "VectorLayer"
                 and layer["source_type"] == "GeoJSONSource"
                 and data is not None
-                and not isinstance(data, str)
             ):
                 self.add(GeoJSON(data, name=layer["name"], style=style))
                 if layer["has_filters"]:

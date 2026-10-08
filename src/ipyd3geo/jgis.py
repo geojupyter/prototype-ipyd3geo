@@ -21,9 +21,9 @@ def _flatten(tree: list) -> Iterator[str]:
 def read_layers(path: str | pathlib.Path) -> list[dict]:
     """Return every layer in the file, bottom to top, with its source info.
 
-    Keys: name, type, visible, source_type, path, data, has_filters. Local
-    paths are resolved against the .jGIS file's directory (as a Path); URLs stay
-    strings. Missing values are None.
+    Keys: name, type, visible, source_type, path, url, data, has_filters.
+    Local paths go in path, resolved against the .jGIS file's directory (as a
+    Path); remote sources go in url (as a str). Missing values are None.
     """
     path = pathlib.Path(path)
     doc = json.loads(path.read_text())
@@ -39,7 +39,10 @@ def read_layers(path: str | pathlib.Path) -> list[dict]:
         source = sources.get((layer.get("parameters") or {}).get("source")) or {}
         source_params = source.get("parameters") or {}
         source_path = source_params.get("path")
-        if source_path and "://" not in source_path:
+        url = None
+        if source_path and "://" in source_path:
+            url, source_path = source_path, None
+        elif source_path:
             source_path = path.parent / source_path
         result.append(
             {
@@ -48,6 +51,7 @@ def read_layers(path: str | pathlib.Path) -> list[dict]:
                 "visible": layer.get("visible", True),
                 "source_type": source.get("type"),
                 "path": source_path,
+                "url": url,
                 "data": source_params.get("data"),
                 "has_filters": bool((layer.get("filters") or {}).get("appliedFilters")),
             }
