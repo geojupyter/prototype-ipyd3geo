@@ -147,6 +147,11 @@ async function render({ model, el }) {
           "http://www.w3.org/2000/svg",
           "path",
         );
+        if (style.radius != null) {
+          path.pointRadius(style.radius);
+        } else {
+          path.pointRadius(4.5);
+        }
         layer.setAttribute("d", path(feature));
         layer.setAttribute("fill", style.fill_color || "none");
         layer.setAttribute("stroke", style.stroke_color || "#000000");
