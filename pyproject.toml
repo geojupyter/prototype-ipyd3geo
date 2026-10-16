@@ -1,6 +1,6 @@
 [project]
 name = "ipyd3geo"
-version = "0.2.0"
+version = "0.3.0"
 description = "An interactive map widget for Jupyter that uses D3 Geo as its renderer."
 readme = "README.md"
 license = "BSD-3-Clause"
