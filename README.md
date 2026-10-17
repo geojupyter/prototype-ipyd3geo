@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="readme-media/butterfly.svg" alt="ipyd3geo butterfly projection map" width="100%">
-</p>
+![ipyd3geo butterfly projection map](readme-media/butterfly.svg)
 
 # ipyd3geo
 
@@ -48,4 +46,4 @@ uv run pre-commit install ## Run ruff and prettier automatically on every commit
 uv run pre-commit run --all-files ## Run the linters manually
 ```
 
-See [examples/example.ipynb](examples/example.ipynb) for usage.
+See [examples/example.ipynb](https://github.com/geojupyter/prototype-ipyd3geo/blob/main/examples/example.ipynb) for usage.
