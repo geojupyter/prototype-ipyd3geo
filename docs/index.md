@@ -1,7 +1,10 @@
-# ipyd3geo
+```{include} ../README.md
+:relative-images:
+```
 
 ```{toctree}
 :maxdepth: 2
+:hidden:
 
 api
 ```
