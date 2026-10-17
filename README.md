@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="readme-media/butterfly.svg" alt="ipyd3geo butterfly projection map" width="100%">
+</p>
+
 # ipyd3geo
 
 A Jupyter widget for D3-based geospatial visualization.
