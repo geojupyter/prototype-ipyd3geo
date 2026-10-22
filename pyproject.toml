@@ -45,6 +45,9 @@ dev = [
     "pytest>=9.1.1",
 ]
 docs = [
+    "jupyterlite-core>=0.8.6",
+    "jupyterlite-pyodide-kernel>=0.8.6",
+    "jupyterlite-sphinx>=0.23.0",
     "myst-parser>=5.1.0",
     "pydata-sphinx-theme>=0.21.0",
     "sphinx>=9.1.0",
