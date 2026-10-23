@@ -2,8 +2,10 @@
 
 # ipyd3geo
 
-[![lite-badge]][lite] [![docs-badge]][docs]
+[![pypi-badge]][pypi] [![lite-badge]][lite] [![docs-badge]][docs]
 
+[pypi-badge]: https://img.shields.io/pypi/v/ipyd3geo
+[pypi]: https://pypi.org/project/ipyd3geo/
 [lite-badge]: https://jupyterlite.readthedocs.io/en/latest/_static/badge.svg
 [lite]: https://ipyd3geo.readthedocs.io/en/latest/lite/lab/index.html?path=example.ipynb
 [docs-badge]: https://readthedocs.org/projects/ipyd3geo/badge/?version=latest
