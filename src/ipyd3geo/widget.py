@@ -509,14 +509,26 @@ class GeoJSON(Layer):
         self.data = {**data, "features": features}
 
 
-class GeoData(Layer):
+class GeoData(GeoJSON):
     """A GeoDataFrame (such as from geopandas) layer on the map.
 
-    **Not implemented yet.**
+    The data is reprojected to WGS84 (EPSG:4326), so it must have a CRS set.
+
+    Args:
+        data (geopandas.GeoDataFrame): The GeoDataFrame to draw.
+        name (str): The name of the layer.
+        style (VectorStyle): The style of the layer.
     """
 
-    def __init__(self, data: object, name: str = "") -> None:
-        raise NotImplementedError
+    def __init__(
+        self,
+        data: object,
+        name: str = "",
+        style: VectorStyle | None = None,
+    ) -> None:
+        data = data.set_geometry(data.geometry.orient_polygons(exterior_cw=True))
+        geojson = data.to_json(to_wgs84=True, default=str)
+        super().__init__(json.loads(geojson), name, style)
 
 
 class Raster(Layer):
