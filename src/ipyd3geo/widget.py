@@ -526,7 +526,9 @@ class GeoData(GeoJSON):
         name: str = "",
         style: VectorStyle | None = None,
     ) -> None:
-        super().__init__(json.loads(data.to_json(to_wgs84=True)), name, style)
+        data = data.set_geometry(data.geometry.orient_polygons(exterior_cw=True))
+        geojson = data.to_json(to_wgs84=True, default=str)
+        super().__init__(json.loads(geojson), name, style)
 
 
 class Raster(Layer):
