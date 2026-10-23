@@ -8,7 +8,7 @@
 [pypi]: https://pypi.org/project/ipyd3geo/
 [lite-badge]: https://jupyterlite.readthedocs.io/en/latest/_static/badge.svg
 [lite]: https://ipyd3geo.readthedocs.io/en/latest/lite/lab/index.html?path=example.ipynb
-[docs-badge]: https://app.readthedocs.org/projects/ipyd3geo/badge/?version=latest
+[docs-badge]: https://img.shields.io/readthedocs/ipyd3geo
 [docs]: https://ipyd3geo.readthedocs.io
 
 A Jupyter widget for D3-based geospatial visualization.
