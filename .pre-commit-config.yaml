@@ -21,6 +21,11 @@ repos:
         args: [--fix]
       - id: ruff-format
 
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
+
   # The pre-commit/mirrors-prettier repo is archived (stops at 3.1.0), so run
   # prettier through a local node hook instead.
   - repo: local
