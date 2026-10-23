@@ -1,0 +1,22 @@
+name: Add ReadTheDocs preview links to PR description
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  autolink-rtd-previews:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const url = `https://ipyd3geo--${context.issue.number}.org.readthedocs.build/en/${context.issue.number}/`;
+            await github.rest.pulls.update({
+              ...context.repo,
+              pull_number: context.issue.number,
+              body: `${context.payload.pull_request.body ?? ""}\n\n---\n📚 Documentation preview: ${url}\n💡 JupyterLite preview: ${url}lite/lab/index.html?path=example.ipynb`,
+            });
