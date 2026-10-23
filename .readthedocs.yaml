@@ -12,8 +12,9 @@ build:
     create_environment:
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
-      # Install into RTD's virtualenv (not ./.venv) so Sphinx can see the docs deps.
       - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --group docs
+    pre_build:
+      - uv build --wheel --out-dir docs/pypi
 
 sphinx:
   configuration: docs/conf.py
