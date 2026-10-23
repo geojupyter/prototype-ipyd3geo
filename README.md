@@ -2,6 +2,13 @@
 
 # ipyd3geo
 
+[![lite-badge]][lite] [![docs-badge]][docs]
+
+[lite-badge]: https://jupyterlite.readthedocs.io/en/latest/_static/badge.svg
+[lite]: https://ipyd3geo.readthedocs.io/en/latest/lite/lab/index.html?path=example.ipynb
+[docs-badge]: https://readthedocs.org/projects/ipyd3geo/badge/?version=latest
+[docs]: https://ipyd3geo.readthedocs.io
+
 A Jupyter widget for D3-based geospatial visualization.
 
 It is designed to work similarly to other map renderer widgets, but uses D3-Geo as its renderer.
