@@ -39,6 +39,7 @@ include = [
 
 [dependency-groups]
 dev = [
+    "geopandas>=1.1.4",
     "ipykernel>=7.3.0",
     "jupyterlab>=4.6.4",
     "pre-commit>=4.6.2",
