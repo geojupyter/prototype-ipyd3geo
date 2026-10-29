@@ -55,4 +55,6 @@ uv run pre-commit install ## Run ruff and prettier automatically on every commit
 uv run pre-commit run --all-files ## Run the linters manually
 ```
 
+Our AI/LLM contribution policy matches that of [JupyterHub](https://compass.hub.jupyter.org/contribute/llm/). Please review it before opening a PR.
+
 See [examples/example.ipynb](https://github.com/geojupyter/prototype-ipyd3geo/blob/main/examples/example.ipynb) for usage.
