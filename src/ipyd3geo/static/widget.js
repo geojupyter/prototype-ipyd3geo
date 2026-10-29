@@ -6,6 +6,20 @@ import { select } from "https://esm.sh/d3-selection@3.0.0";
 
 const d3 = { ...d3geo, ...d3geoProjection, ...d3geoPolygon };
 
+const INKSCAPE_NS = "http://www.inkscape.org/namespaces/inkscape";
+
+function namedGroup(name, usedIds) {
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const base = name.replace(/[^\w-]/g, "_").replace(/^(?=[\d-])/, "_");
+  let id = base;
+  for (let n = 2; usedIds.has(id); n++) id = `${base}_${n}`;
+  usedIds.add(id);
+  group.setAttribute("id", id);
+  group.setAttributeNS(INKSCAPE_NS, "inkscape:groupmode", "layer");
+  group.setAttributeNS(INKSCAPE_NS, "inkscape:label", name);
+  return group;
+}
+
 async function render({ model, el }) {
   if (model.get("hamburger")) {
     const menuButton = document.createElement("button");
@@ -117,10 +131,11 @@ async function render({ model, el }) {
   svg.setAttribute("viewBox", "0 0 960 500");
   svg.setAttribute("width", "960");
   svg.setAttribute("height", "500");
+  const builtinIds = new Set();
   const sphere = document.createElementNS("http://www.w3.org/2000/svg", "path");
   sphere.setAttribute("fill", "none");
   sphere.setAttribute("stroke", border ? "black" : "none");
-  svg.appendChild(sphere);
+  svg.appendChild(namedGroup("Border", builtinIds)).appendChild(sphere);
 
   let naturalEarth = null;
   if (basemap === "naturalearth") {
@@ -130,18 +145,18 @@ async function render({ model, el }) {
     );
     naturalEarth.setAttribute("fill", "none");
     naturalEarth.setAttribute("stroke", "black");
-    svg.appendChild(naturalEarth);
+    svg
+      .appendChild(namedGroup("Basemap", builtinIds))
+      .appendChild(naturalEarth);
   }
 
-  const layerGroup = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "g",
-  );
-  svg.appendChild(layerGroup);
+  let layerGroups = [];
   function drawLayers() {
-    layerGroup.replaceChildren();
-    for (const layerData of model.get("layers")) {
-      for (const feature of layerData.features) {
+    for (const group of layerGroups) group.remove();
+    const usedIds = new Set(builtinIds);
+    layerGroups = model.get("layers").map(({ name, data }, i) => {
+      const layerGroup = namedGroup(name || `Layer ${i + 1}`, usedIds);
+      for (const feature of data.features) {
         const style = feature.properties.__ipyd3geo_style__ || {};
         const layer = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -156,7 +171,9 @@ async function render({ model, el }) {
         layer.setAttribute("fill-opacity", style.fill_opacity || 0.2);
         layerGroup.appendChild(layer);
       }
-    }
+      svg.insertBefore(layerGroup, graticule?.parentNode ?? null);
+      return layerGroup;
+    });
   }
   model.on("change:layers", drawLayers);
 
@@ -166,7 +183,7 @@ async function render({ model, el }) {
     graticule.setAttribute("fill", "none");
     graticule.setAttribute("stroke", "lightgray");
     graticule.setAttribute("opacity", "0.5");
-    svg.appendChild(graticule);
+    svg.appendChild(namedGroup("Graticule", builtinIds)).appendChild(graticule);
   }
 
   svg.style.border = "2px solid black";
