@@ -7,6 +7,7 @@ import json
 import pathlib
 import warnings
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import anywidget
 import traitlets
@@ -467,8 +468,11 @@ class GeoJSON(Layer):
     """A GeoJSON layer on the map.
 
     Args:
-        data (dict, str, or pathlib.Path): GeoJSON as a dict, a JSON string, or a
-            path to a GeoJSON file.
+        data (dict, str, or pathlib.Path): GeoJSON as a dict, a JSON string, a
+            path to a GeoJSON file, or an ``http://`` or ``https://`` URL. A URL
+            is fetched by the browser when the map is drawn, so the server must
+            allow cross-origin requests, and the style values must be constants
+            rather than callables.
         name (str): The name of the layer.
         style (VectorStyle): The style of the layer.
     """
@@ -480,6 +484,20 @@ class GeoJSON(Layer):
         style: VectorStyle | None = None,
     ) -> None:
         super().__init__(name)
+        style = style or VectorStyle()
+        if isinstance(data, str) and urlparse(data).scheme in {"http", "https"}:
+            # The browser fetches the URL (see widget.js), so the features never
+            # reach Python and a callable style value has nothing to run on.
+            if any(callable(value) for value in vars(style).values()):
+                msg = "style values must be constants when data is a URL"
+                raise ValueError(msg)
+            self.data = {
+                "type": "FeatureCollection",
+                "features": [],
+                "__ipyd3geo_url__": data,
+                "__ipyd3geo_style__": style.resolve({}),
+            }
+            return
         if isinstance(data, pathlib.Path):
             data = json.loads(data.read_text())
         elif isinstance(data, str):
@@ -493,7 +511,6 @@ class GeoJSON(Layer):
         elif not isinstance(data, dict):
             msg = "data must be a dict, str, or pathlib.Path"
             raise TypeError(msg)
-        style = style or VectorStyle()
         features = []
         for f in data.get("features", []):
             props = f.get("properties") or {}
