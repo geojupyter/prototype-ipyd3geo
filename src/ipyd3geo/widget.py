@@ -9,6 +9,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 import anywidget
+import tifffile
 import traitlets
 
 from .jgis import read_layers
@@ -537,8 +538,30 @@ class Raster(Layer):
     **Not implemented yet.**
     """
 
-    def __init__(self, data: str | pathlib.Path, name: str = "") -> None:
-        raise NotImplementedError
+    def __init__(self, data: str | pathlib.Path, name: str = "", dpi: int = 96) -> None:
+        super().__init__(name)
+        try:
+            tif = tifffile.TiffFile(data)
+        except tifffile.TiffFileError as e:
+            msg = f"{data} is not a TIFF file. Only GeoTIFF files are supported."
+            raise ValueError(msg) from e
+        with tif:
+            if not tif.is_geotiff:
+                msg = (
+                    f"{data} is a TIFF but not a GeoTIFF (it has no georeferencing "
+                    "tags). Only GeoTIFF files are supported."
+                )
+                raise ValueError(msg)
+        with tif:
+            geokeys = tif.pages[0].tags[34735].value
+            if geokeys.get(2048) != 4326:
+                msg = (
+                    f"{data} is a GeoTIFF but not in WGS84 (EPSG:4326). Only "
+                    "GeoTIFFs in WGS84 are supported. learn more"
+                    # TODO: add a docs page about projection with rasters.
+                    "[here]()"
+                )
+                raise ValueError(msg)
 
 
 class TileService(Layer):
