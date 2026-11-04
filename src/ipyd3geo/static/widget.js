@@ -127,6 +127,11 @@ async function render({ model, el }) {
   svg.setAttribute("viewBox", "0 0 960 500");
   svg.setAttribute("width", "960");
   svg.setAttribute("height", "500");
+  svg.setAttributeNS(
+    "http://www.w3.org/2000/xmlns/",
+    "xmlns:inkscape",
+    INKSCAPE_NS,
+  );
   const sphere = document.createElementNS("http://www.w3.org/2000/svg", "path");
   sphere.setAttribute("fill", "none");
   sphere.setAttribute("stroke", border ? "black" : "none");
