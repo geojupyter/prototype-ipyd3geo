@@ -138,11 +138,40 @@ async function render({ model, el }) {
     "g",
   );
   svg.appendChild(layerGroup);
+
+  // A GeoJSON layer created from a URL (see GeoJSON in widget.py) carries the
+  // URL instead of its features. Each URL is fetched once, and the layers are
+  // drawn again when its features arrive.
+  const remoteFeatures = new Map();
+  function fetchRemoteLayers() {
+    const requests = [];
+    for (const layerData of model.get("layers")) {
+      const url = layerData.__ipyd3geo_url__;
+      if (url === undefined || remoteFeatures.has(url)) continue;
+      remoteFeatures.set(url, []);
+      requests.push(
+        fetch(url)
+          .then((res) => res.json())
+          .then((geojson) => remoteFeatures.set(url, geojson.features ?? [])),
+      );
+    }
+    if (requests.length > 0) Promise.all(requests).then(drawLayers);
+  }
+  function layerFeatures(layerData) {
+    const url = layerData.__ipyd3geo_url__;
+    return url === undefined
+      ? layerData.features
+      : (remoteFeatures.get(url) ?? []);
+  }
+
   function drawLayers() {
     layerGroup.replaceChildren();
     for (const layerData of model.get("layers")) {
-      for (const feature of layerData.features) {
-        const style = feature.properties.__ipyd3geo_style__ || {};
+      for (const feature of layerFeatures(layerData)) {
+        const style =
+          feature.properties?.__ipyd3geo_style__ ||
+          layerData.__ipyd3geo_style__ ||
+          {};
         const layer = document.createElementNS(
           "http://www.w3.org/2000/svg",
           "path",
@@ -158,7 +187,10 @@ async function render({ model, el }) {
       }
     }
   }
-  model.on("change:layers", drawLayers);
+  model.on("change:layers", () => {
+    fetchRemoteLayers();
+    drawLayers();
+  });
 
   let graticule = null;
   if (model.get("graticule")) {
@@ -178,6 +210,7 @@ async function render({ model, el }) {
     drawLayers();
   }
   redraw();
+  fetchRemoteLayers();
 
   const dynamic = model.get("dynamic");
   if (dynamic !== "none") {
