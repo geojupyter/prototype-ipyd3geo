@@ -553,9 +553,7 @@ class Raster(Layer):
                 )
                 raise ValueError(msg)
             # using magic number 4326 for WGS84, see https://www.iana.org/assignments/geo-keys/geo-keys.xhtml
-            if tif.geotiff_metadata.get("GeographicTypeGeoKey") == 4326:  # noqa: PLR2004
-                pass
-            else:
+            if tif.geotiff_metadata.get("GeographicTypeGeoKey") != 4326:  # noqa: PLR2004
                 msg = (
                     f"{data} is a GeoTIFF but not in WGS84 (EPSG:4326). Only "
                     "GeoTIFFs in WGS84 are supported. learn more"
@@ -563,6 +561,7 @@ class Raster(Layer):
                     "[here]()"
                 )
                 raise ValueError(msg)
+            pass
 
 
 class TileService(Layer):
