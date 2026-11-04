@@ -200,7 +200,7 @@ class Map(anywidget.AnyWidget):
 
     def add(self, layer: Layer) -> None:
         """Add a layer to the map. Only GeoJSON layers are supported so far."""
-        self.layers = [*self.layers, layer.data]
+        self.layers = [*self.layers, {"name": layer.name, "data": layer.data}]
 
     def add_from_jgis(
         self,
