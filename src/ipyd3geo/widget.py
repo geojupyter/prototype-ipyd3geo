@@ -552,9 +552,7 @@ class Raster(Layer):
                     "tags). Only GeoTIFF files are supported."
                 )
                 raise ValueError(msg)
-        with tif:
-            geokeys = tif.pages[0].tags[34735].value
-            if geokeys.get(2048) == 4326:
+            if tif.geotiff_metadata.get("GeographicTypeGeoKey") == 4326:
                 pass
             else:
                 msg = (
