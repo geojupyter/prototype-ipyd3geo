@@ -561,7 +561,6 @@ class Raster(Layer):
                     "[here]()"
                 )
                 raise ValueError(msg)
-            pass
 
 
 class TileService(Layer):
