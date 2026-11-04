@@ -552,7 +552,8 @@ class Raster(Layer):
                     "tags). Only GeoTIFF files are supported."
                 )
                 raise ValueError(msg)
-            if tif.geotiff_metadata.get("GeographicTypeGeoKey") == 4326:
+            # using magic number 4326 for WGS84, see https://www.iana.org/assignments/geo-keys/geo-keys.xhtml
+            if tif.geotiff_metadata.get("GeographicTypeGeoKey") == 4326:  # noqa: PLR2004
                 pass
             else:
                 msg = (
