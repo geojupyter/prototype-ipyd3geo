@@ -8,13 +8,9 @@ const d3 = { ...d3geo, ...d3geoProjection, ...d3geoPolygon };
 
 const INKSCAPE_NS = "http://www.inkscape.org/namespaces/inkscape";
 
-function namedGroup(name, usedIds) {
+function namedGroup(name) {
   const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  const base = name.replace(/[^\w-]/g, "_").replace(/^(?=[\d-])/, "_");
-  let id = base;
-  for (let n = 2; usedIds.has(id); n++) id = `${base}_${n}`;
-  usedIds.add(id);
-  group.setAttribute("id", id);
+  group.setAttribute("id", name);
   group.setAttributeNS(INKSCAPE_NS, "inkscape:groupmode", "layer");
   group.setAttributeNS(INKSCAPE_NS, "inkscape:label", name);
   return group;
@@ -131,11 +127,10 @@ async function render({ model, el }) {
   svg.setAttribute("viewBox", "0 0 960 500");
   svg.setAttribute("width", "960");
   svg.setAttribute("height", "500");
-  const builtinIds = new Set();
   const sphere = document.createElementNS("http://www.w3.org/2000/svg", "path");
   sphere.setAttribute("fill", "none");
   sphere.setAttribute("stroke", border ? "black" : "none");
-  svg.appendChild(namedGroup("Border", builtinIds)).appendChild(sphere);
+  svg.appendChild(namedGroup("Border")).appendChild(sphere);
 
   let naturalEarth = null;
   if (basemap === "naturalearth") {
@@ -145,9 +140,7 @@ async function render({ model, el }) {
     );
     naturalEarth.setAttribute("fill", "none");
     naturalEarth.setAttribute("stroke", "black");
-    svg
-      .appendChild(namedGroup("Basemap", builtinIds))
-      .appendChild(naturalEarth);
+    svg.appendChild(namedGroup("Basemap")).appendChild(naturalEarth);
   }
 
   let graticule = null;
@@ -156,15 +149,14 @@ async function render({ model, el }) {
     graticule.setAttribute("fill", "none");
     graticule.setAttribute("stroke", "lightgray");
     graticule.setAttribute("opacity", "0.5");
-    svg.appendChild(namedGroup("Graticule", builtinIds)).appendChild(graticule);
+    svg.appendChild(namedGroup("Graticule")).appendChild(graticule);
   }
 
   let layerGroups = [];
   function drawLayers() {
     for (const group of layerGroups) group.remove();
-    const usedIds = new Set(builtinIds);
     layerGroups = model.get("layers").map(({ name, data }, i) => {
-      const layerGroup = namedGroup(name || `Layer ${i + 1}`, usedIds);
+      const layerGroup = namedGroup(name || `Layer ${i + 1}`);
       for (const feature of data.features) {
         const style = feature.properties.__ipyd3geo_style__ || {};
         const layer = document.createElementNS(
