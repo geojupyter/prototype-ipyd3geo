@@ -561,6 +561,23 @@ class Raster(Layer):
                     "[here]()"
                 )
                 raise ValueError(msg)
+            meta = tif.geotiff_metadata
+            image = tif.asarray()
+        # Pixel (col, row) -> (lon, lat): lon = west + col * dx, lat = north - row * dy
+        dx, dy = meta["ModelPixelScale"][:2]
+        i, j, _, lon0, lat0, _ = meta["ModelTiepoint"][:6]
+        west, north = lon0 - i * dx, lat0 + j * dy
+        height, width = image.shape[:2]
+        self.data = {
+            "type": "Raster",
+            "name": name,
+            "width": width,
+            "height": height,
+            "bands": 1 if image.ndim == 2 else image.shape[2],  # noqa: PLR2004
+            "dtype": str(image.dtype),
+            "bounds": [west, north - height * dy, west + width * dx, north],
+            "pixels": image.tobytes(),
+        }
 
 
 class TileService(Layer):
