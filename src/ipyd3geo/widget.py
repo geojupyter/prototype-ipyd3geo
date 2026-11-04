@@ -554,7 +554,9 @@ class Raster(Layer):
                 raise ValueError(msg)
         with tif:
             geokeys = tif.pages[0].tags[34735].value
-            if geokeys.get(2048) != 4326:
+            if geokeys.get(2048) == 4326:
+                pass
+            else:
                 msg = (
                     f"{data} is a GeoTIFF but not in WGS84 (EPSG:4326). Only "
                     "GeoTIFFs in WGS84 are supported. learn more"
