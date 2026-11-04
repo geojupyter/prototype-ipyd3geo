@@ -150,6 +150,15 @@ async function render({ model, el }) {
       .appendChild(naturalEarth);
   }
 
+  let graticule = null;
+  if (model.get("graticule")) {
+    graticule = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    graticule.setAttribute("fill", "none");
+    graticule.setAttribute("stroke", "lightgray");
+    graticule.setAttribute("opacity", "0.5");
+    svg.appendChild(namedGroup("Graticule", builtinIds)).appendChild(graticule);
+  }
+
   let layerGroups = [];
   function drawLayers() {
     for (const group of layerGroups) group.remove();
@@ -176,15 +185,6 @@ async function render({ model, el }) {
     });
   }
   model.on("change:layers", drawLayers);
-
-  let graticule = null;
-  if (model.get("graticule")) {
-    graticule = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    graticule.setAttribute("fill", "none");
-    graticule.setAttribute("stroke", "lightgray");
-    graticule.setAttribute("opacity", "0.5");
-    svg.appendChild(namedGroup("Graticule", builtinIds)).appendChild(graticule);
-  }
 
   svg.style.border = "2px solid black";
 
