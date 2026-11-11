@@ -367,16 +367,16 @@ class Graticule:
 
     Args:
         step (tuple[float, float]): The step size for the graticule lines.
+        extent (tuple[tuple[float, float], tuple[float, float]]): The extent of
+            the graticule lines.
         step_major (tuple[float, float]): The step size for the major
             graticule lines (overrides step).
         step_minor (tuple[float, float]): The step size for the minor
             graticule lines (overrides step).
-        extent (tuple[float, float]): The extent of the graticule lines.
-        extent_major (tuple[float, float]): The extent of the major
-            graticule lines (overrides extent).
-        extent_minor (tuple[float, float]): The extent of the minor
-        graticule lines (overrides extent).
-            graticule lines (overrides extent).
+        extent_major (tuple[tuple[float, float], tuple[float, float]]): The extent of
+            the major graticule lines (overrides extent).
+        extent_minor (tuple[tuple[float, float], tuple[float, float]]): The extent of
+            the minor graticule lines (overrides extent).
         precision (float): The precision of projected curves in the
             graticule lines in degrees.
     """
