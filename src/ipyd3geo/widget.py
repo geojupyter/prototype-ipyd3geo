@@ -114,6 +114,36 @@ class Map(anywidget.AnyWidget):
     dynamic = traitlets.Unicode("pan").tag(sync=True)
     basemap = traitlets.Unicode("").tag(sync=True)
     hamburger = traitlets.Bool(default_value=True).tag(sync=True)
+    graticule_step = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
+    graticule_extent = traitlets.Tuple(
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        allow_none=True,
+        default_value=None,
+    ).tag(sync=True)
+    graticule_step_major = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
+    graticule_step_minor = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
+    graticule_extent_major = traitlets.Tuple(
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        allow_none=True,
+        default_value=None,
+    ).tag(sync=True)
+    graticule_extent_minor = traitlets.Tuple(
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        allow_none=True,
+        default_value=None,
+    ).tag(sync=True)
+    graticule_precision = traitlets.Float(allow_none=True, default_value=None).tag(
+        sync=True
+    )
 
     class Export:
         """Export helpers for a map."""
@@ -381,6 +411,18 @@ class Graticule:
             graticule lines in degrees.
     """
 
+    DEFAULT_STEP_MAJOR: tuple[float, float] = (90, 360)
+    DEFAULT_STEP_MINOR: tuple[float, float] = (10, 10)
+    DEFAULT_EXTENT_MAJOR: tuple[tuple[float, float], tuple[float, float]] = (
+        (-180, -90 + 1e-6),
+        (180, 90 - 1e-6),
+    )
+    DEFAULT_EXTENT_MINOR: tuple[tuple[float, float], tuple[float, float]] = (
+        (-180, -80 - 1e-6),
+        (180, 80 + 1e-6),
+    )
+    DEFAULT_PRECISION: float = 2.5
+
     # Each graticule-specific option from d3-geo is its own keyword-only
     # argument, mirroring the documented public API.
     def __init__(  # noqa: PLR0913
@@ -388,18 +430,40 @@ class Graticule:
         step: tuple[float, float] | None = None,
         extent: tuple[tuple[float, float], tuple[float, float]] | None = None,
         *,
-        step_major: tuple[float, float] = (90, 360),
-        step_minor: tuple[float, float] = (10, 10),
-        extent_major: tuple[tuple[float, float], tuple[float, float]] = (
-            (-180, -90 + 1e-6),
-            (180, 90 - 1e-6),
-        ),
-        extent_minor: tuple[tuple[float, float], tuple[float, float]] = (
-            (-180, -80 - 1e-6),
-            (180, 80 + 1e-6),
-        ),
-        precision: float = 2.5,
+        step_major: tuple[float, float] | None = None,
+        step_minor: tuple[float, float] | None = None,
+        extent_major: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        extent_minor: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        precision: float | None = None,
     ) -> None:
+        self.graticule_step = step
+        if step is not None:
+            self.graticule_step_major = step_major
+            self.graticule_step_minor = step_minor
+        else:
+            self.graticule_step_major = (
+                step_major if step_major is not None else self.DEFAULT_STEP_MAJOR
+            )
+            self.graticule_step_minor = (
+                step_minor if step_minor is not None else self.DEFAULT_STEP_MINOR
+            )
+
+        self.graticule_extent = extent
+        if extent is not None:
+            self.graticule_extent_major = extent_major
+            self.graticule_extent_minor = extent_minor
+        else:
+            self.graticule_extent_major = (
+                extent_major if extent_major is not None else self.DEFAULT_EXTENT_MAJOR
+            )
+            self.graticule_extent_minor = (
+                extent_minor if extent_minor is not None else self.DEFAULT_EXTENT_MINOR
+            )
+
+        self.graticule_precision = (
+            precision if precision is not None else self.DEFAULT_PRECISION
+        )
+
         raise NotImplementedError
 
 
