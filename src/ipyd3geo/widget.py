@@ -9,6 +9,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 import anywidget
+import tifffile
 import traitlets
 
 from .jgis import read_layers
@@ -537,8 +538,46 @@ class Raster(Layer):
     **Not implemented yet.**
     """
 
-    def __init__(self, data: str | pathlib.Path, name: str = "") -> None:
-        raise NotImplementedError
+    def __init__(self, data: str | pathlib.Path, name: str = "", dpi: int = 96) -> None:
+        super().__init__(name)
+        try:
+            tif = tifffile.TiffFile(data)
+        except tifffile.TiffFileError as e:
+            msg = f"{data} is not a TIFF file. Only GeoTIFF files are supported."
+            raise ValueError(msg) from e
+        with tif:
+            if not tif.is_geotiff:
+                msg = (
+                    f"{data} is a TIFF but not a GeoTIFF (it has no georeferencing "
+                    "tags). Only GeoTIFF files are supported."
+                )
+                raise ValueError(msg)
+            # using magic number 4326 for WGS84, see https://www.iana.org/assignments/geo-keys/geo-keys.xhtml
+            if tif.geotiff_metadata.get("GeographicTypeGeoKey") != 4326:  # noqa: PLR2004
+                msg = (
+                    f"{data} is a GeoTIFF but not in WGS84 (EPSG:4326). Only "
+                    "GeoTIFFs in WGS84 are supported. learn more"
+                    # TODO: add a docs page about projection with rasters.
+                    "[here]()"
+                )
+                raise ValueError(msg)
+            meta = tif.geotiff_metadata
+            image = tif.asarray()
+        # Pixel (col, row) -> (lon, lat): lon = west + col * dx, lat = north - row * dy
+        dx, dy = meta["ModelPixelScale"][:2]
+        i, j, _, lon0, lat0, _ = meta["ModelTiepoint"][:6]
+        west, north = lon0 - i * dx, lat0 + j * dy
+        height, width = image.shape[:2]
+        self.data = {
+            "type": "Raster",
+            "name": name,
+            "width": width,
+            "height": height,
+            "bands": 1 if image.ndim == 2 else image.shape[2],  # noqa: PLR2004
+            "dtype": str(image.dtype),
+            "bounds": [west, north - height * dy, west + width * dx, north],
+            "pixels": image.tobytes(),
+        }
 
 
 class TileService(Layer):
