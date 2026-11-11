@@ -362,6 +362,47 @@ class Projection:
         self.tilt = tilt
 
 
+class Graticule:
+    """Configures the graticule for the map widget.
+
+    Args:
+        step (tuple[float, float]): The step size for the graticule lines.
+        step_major (tuple[float, float]): The step size for the major
+            graticule lines (overrides step).
+        step_minor (tuple[float, float]): The step size for the minor
+            graticule lines (overrides step).
+        extent (tuple[float, float]): The extent of the graticule lines.
+        extent_major (tuple[float, float]): The extent of the major
+            graticule lines (overrides extent).
+        extent_minor (tuple[float, float]): The extent of the minor
+        graticule lines (overrides extent).
+            graticule lines (overrides extent).
+        precision (float): The precision of projected curves in the
+            graticule lines in degrees.
+    """
+
+    # Each graticule-specific option from d3-geo is its own keyword-only
+    # argument, mirroring the documented public API.
+    def __init__(  # noqa: PLR0913
+        self,
+        step: tuple[float, float] | None = None,
+        extent: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        *,
+        step_major: tuple[float, float] = (90, 360),
+        step_minor: tuple[float, float] = (10, 10),
+        extent_major: tuple[tuple[float, float], tuple[float, float]] = (
+            (-180, -90 + 1e-6),
+            (180, 90 - 1e-6),
+        ),
+        extent_minor: tuple[tuple[float, float], tuple[float, float]] = (
+            (-180, -80 - 1e-6),
+            (180, 80 + 1e-6),
+        ),
+        precision: float = 2.5,
+    ) -> None:
+        raise NotImplementedError
+
+
 class VectorStyle:
     """Style for vector features.
 
