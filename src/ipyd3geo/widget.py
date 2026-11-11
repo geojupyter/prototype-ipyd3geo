@@ -168,7 +168,7 @@ class Map(anywidget.AnyWidget):
         zoom: float = 1.0,
         projection: Projection | str | None = None,
         *,
-        graticule: bool = False,
+        graticule: bool | Graticule = False,
         border: bool = True,
         basemap: bool | str = False,
         hamburger: bool = True,
@@ -205,8 +205,18 @@ class Map(anywidget.AnyWidget):
         self.projection_shift = projection.shift
         self.projection_spacing = projection.spacing
         self.projection_tilt = projection.tilt
+        if isinstance(graticule, Graticule):
+            self.graticule = True
+            self.graticule_step = graticule.graticule_step
+            self.graticule_extent = graticule.graticule_extent
+            self.graticule_step_major = graticule.graticule_step_major
+            self.graticule_step_minor = graticule.graticule_step_minor
+            self.graticule_extent_major = graticule.graticule_extent_major
+            self.graticule_extent_minor = graticule.graticule_extent_minor
+            self.graticule_precision = graticule.graticule_precision
+        else:
+            self.graticule = graticule
         self.border = border
-        self.graticule = graticule
         if basemap in {"naturalearth", True}:
             self.basemap = "naturalearth"
         elif basemap is False:
