@@ -9,6 +9,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 import anywidget
+import numpy as np
 import tifffile
 import traitlets
 
@@ -562,21 +563,41 @@ class Raster(Layer):
                 )
                 raise ValueError(msg)
             meta = tif.geotiff_metadata
-            image = tif.asarray()
+            page = tif.pages[0]
+            image = page.asarray()
+            if page.axes.startswith("S"):  # bands stored as separate planes
+                image = np.moveaxis(image, 0, -1)
+            nodata_tag = page.tags.get("GDAL_NODATA")
+            nodata = float(nodata_tag.value) if nodata_tag else None
         # Pixel (col, row) -> (lon, lat): lon = west + col * dx, lat = north - row * dy
         dx, dy = meta["ModelPixelScale"][:2]
         i, j, _, lon0, lat0, _ = meta["ModelTiepoint"][:6]
         west, north = lon0 - i * dx, lat0 + j * dy
         height, width = image.shape[:2]
+
+        # Convert any GeoTIFF to 8-bit RGBA so the browser only handles one format.
+        if image.ndim == 2:  # noqa: PLR2004
+            image = image[..., np.newaxis]
+        rgb = image[..., :3] if image.shape[-1] >= 3 else image[..., :1].repeat(3, -1)  # noqa: PLR2004
+        rgb = rgb.astype(np.float64)
+        missing = np.isnan(rgb).any(axis=-1)
+        if nodata is not None:
+            missing |= (image == nodata).all(axis=-1)
+        if image.dtype != np.uint8:
+            # Stretch the data's range to 0-255.
+            valid = rgb[~missing]
+            lo, hi = (valid.min(), valid.max()) if valid.size else (0, 1)
+            rgb = (rgb - lo) / ((hi - lo) or 1) * 255
+        alpha = np.where(missing, 0, 255)[..., np.newaxis]
+        rgba = np.concatenate([np.nan_to_num(rgb), alpha], axis=-1).astype(np.uint8)
+
         self.data = {
             "type": "Raster",
             "name": name,
             "width": width,
             "height": height,
-            "bands": 1 if image.ndim == 2 else image.shape[2],  # noqa: PLR2004
-            "dtype": str(image.dtype),
             "bounds": [west, north - height * dy, west + width * dx, north],
-            "pixels": image.tobytes(),
+            "pixels": rgba.tobytes(),
         }
 
 

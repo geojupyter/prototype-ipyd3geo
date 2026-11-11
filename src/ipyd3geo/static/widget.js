@@ -6,6 +6,43 @@ import { select } from "https://esm.sh/d3-selection@3.0.0";
 
 const d3 = { ...d3geo, ...d3geoProjection, ...d3geoPolygon };
 
+// Draw a raster (8-bit RGBA from Python): for every screen pixel, ask the
+// projection which lon/lat lands there and copy the raster pixel at that lon/lat.
+function renderRaster(layer, projection) {
+  const { width, height } = layer;
+  const [west, south, east, north] = layer.bounds;
+  const pixels = new Uint8Array(
+    layer.pixels.buffer,
+    layer.pixels.byteOffset,
+    layer.pixels.byteLength,
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = 960;
+  canvas.height = 500;
+  const ctx = canvas.getContext("2d");
+  const img = ctx.createImageData(960, 500);
+  for (let y = 0; y < 500; y++) {
+    for (let x = 0; x < 960; x++) {
+      const lonlat = projection.invert([x + 0.5, y + 0.5]);
+      if (!lonlat) continue;
+      const col = Math.floor(((lonlat[0] - west) / (east - west)) * width);
+      const row = Math.floor(((north - lonlat[1]) / (north - south)) * height);
+      // Written this way so NaN coordinates are skipped too.
+      if (!(col >= 0 && col < width && row >= 0 && row < height)) continue;
+      const src = (row * width + col) * 4;
+      const out = (y * 960 + x) * 4;
+      for (let c = 0; c < 4; c++) img.data[out + c] = pixels[src + c];
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  // An <image> (not the canvas itself) so "Export SVG" includes the raster.
+  const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+  image.setAttribute("width", 960);
+  image.setAttribute("height", 500);
+  image.setAttribute("href", canvas.toDataURL());
+  return image;
+}
+
 async function render({ model, el }) {
   if (model.get("hamburger")) {
     const menuButton = document.createElement("button");
@@ -141,6 +178,10 @@ async function render({ model, el }) {
   function drawLayers() {
     layerGroup.replaceChildren();
     for (const layerData of model.get("layers")) {
+      if (layerData.type === "Raster") {
+        layerGroup.appendChild(renderRaster(layerData, projection));
+        continue;
+      }
       for (const feature of layerData.features) {
         const style = feature.properties.__ipyd3geo_style__ || {};
         const layer = document.createElementNS(
