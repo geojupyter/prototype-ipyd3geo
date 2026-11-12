@@ -50,7 +50,7 @@ uv add ipyd3geo
 
 ```sh
 uv sync
-pnpm install ## No build step is actually needed yet. This will be added in the future
+pnpm install
 uv run pre-commit install ## Run ruff and prettier automatically on every commit
 uv run pre-commit run --all-files ## Run the linters manually
 ```
