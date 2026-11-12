@@ -144,6 +144,7 @@ class Map(anywidget.AnyWidget):
     graticule_precision = traitlets.Float(allow_none=True, default_value=None).tag(
         sync=True
     )
+    graticule_style = traitlets.Dict().tag(sync=True)
 
     class Export:
         """Export helpers for a map."""
@@ -214,6 +215,7 @@ class Map(anywidget.AnyWidget):
             self.graticule_extent_major = graticule.graticule_extent_major
             self.graticule_extent_minor = graticule.graticule_extent_minor
             self.graticule_precision = graticule.graticule_precision
+            self.graticule_style = graticule.graticule_style
         else:
             self.graticule = graticule
         self.border = border
@@ -419,6 +421,9 @@ class Graticule:
             the minor graticule lines (overrides extent).
         precision (float): The precision of projected curves in the
             graticule lines in degrees.
+        style (VectorStyle): The style of the graticule lines. Only stroke-related
+            attributes are used, and callables are not supported.
+            Defaults to light gray at half opacity.
     """
 
     DEFAULT_STEP_MAJOR: tuple[float, float] = (90, 360)
@@ -439,12 +444,15 @@ class Graticule:
         self,
         step: tuple[float, float] | None = None,
         extent: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        style: VectorStyle | None = None,
         *,
         step_major: tuple[float, float] | None = None,
         step_minor: tuple[float, float] | None = None,
         extent_major: tuple[tuple[float, float], tuple[float, float]] | None = None,
         extent_minor: tuple[tuple[float, float], tuple[float, float]] | None = None,
         precision: float | None = None,
+        style_major: VectorStyle | None = None,
+        style_minor: VectorStyle | None = None,
     ) -> None:
         self.graticule_step = step
         if step is not None:
@@ -473,6 +481,7 @@ class Graticule:
         self.graticule_precision = (
             precision if precision is not None else self.DEFAULT_PRECISION
         )
+        self.graticule_style = style.resolve({}) if style is not None else {}
 
 
 class VectorStyle:

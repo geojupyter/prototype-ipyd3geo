@@ -168,9 +168,17 @@ async function render({ model, el }) {
   let graticule = null;
   if (model.get("graticule")) {
     graticule = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const graticuleStyle = model.get("graticule_style");
     graticule.setAttribute("fill", "none");
-    graticule.setAttribute("stroke", "lightgray");
-    graticule.setAttribute("opacity", "0.5");
+    graticule.setAttribute(
+      "stroke",
+      graticuleStyle.stroke_color ?? "lightgray",
+    );
+    graticule.setAttribute("stroke-width", graticuleStyle.weight ?? 1);
+    graticule.setAttribute(
+      "stroke-opacity",
+      graticuleStyle.stroke_opacity ?? 0.5,
+    );
     svg.appendChild(namedGroup("Graticule")).appendChild(graticule);
   }
 
