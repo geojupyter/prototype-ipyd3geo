@@ -188,8 +188,7 @@ async function render({ model, el }) {
     graticule.appendChild(graticuleMinor);
     graticule.appendChild(graticuleMajor);
 
-    // When the style hides both line sets, hide the group instead so the
-    // toggle can show them again.
+    // When the style hides both line sets, hide the group instead
     if (
       graticuleMajor.style.display === "none" &&
       graticuleMinor.style.display === "none"
