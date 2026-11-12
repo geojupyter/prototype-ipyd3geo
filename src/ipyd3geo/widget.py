@@ -520,6 +520,7 @@ class VectorStyle:
         stroke_opacity (float or callable): The stroke opacity. Defaults to 1.0.
         fill_opacity (float or callable): The fill opacity. Defaults to 1.0.
         point_radius (float or callable): Point radius in pixels. Defaults to 4.5.
+        hidden (bool or callable): Whether the feature is hidden. Defaults to False.
     """
 
     DEFAULTS: ClassVar[dict] = {
@@ -529,18 +530,21 @@ class VectorStyle:
         "stroke_opacity": 1.0,
         "fill_opacity": 1.0,
         "point_radius": 4.5,
+        "hidden": False,
     }
 
-    # Bypassing Ruff checks for too many positional argument, and too many arguments.
+    # Bypassing Ruff checks for too many arguments.
     # makes sense here because many arguments are needed to configure layer styling
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(  # noqa: PLR0913
         self,
+        *,
         stroke_color: str | Callable[[dict], str] | None = None,
         fill_color: str | Callable[[dict], str] | None = None,
         weight: float | Callable[[dict], float] | None = None,
         stroke_opacity: float | Callable[[dict], float] | None = None,
         fill_opacity: float | Callable[[dict], float] | None = None,
         point_radius: float | Callable[[dict], float] | None = None,
+        hidden: bool | Callable[[dict], bool] | None = None,
     ) -> None:
         self.stroke_color = stroke_color
         self.fill_color = fill_color
@@ -548,6 +552,7 @@ class VectorStyle:
         self.stroke_opacity = stroke_opacity
         self.fill_opacity = fill_opacity
         self.point_radius = point_radius
+        self.hidden = hidden
 
     def resolve(self, properties: dict) -> dict:
         """Return the concrete style for one feature.

@@ -17,12 +17,13 @@ function namedGroup(name) {
 }
 
 async function render({ model, el }) {
+  let menuContent = null;
   if (model.get("hamburger")) {
     const menuButton = document.createElement("button");
     menuButton.textContent = "☰";
     menuButton.style.display = "block";
     el.appendChild(menuButton);
-    const menuContent = document.createElement("div");
+    menuContent = document.createElement("div");
     menuContent.style.display = "none";
     menuContent.style.position = "absolute";
     menuContent.style.color = "black";
@@ -44,20 +45,6 @@ async function render({ model, el }) {
       URL.revokeObjectURL(url);
     });
     menuContent.appendChild(exportSvgButton);
-
-    //TODO this is the wrong approach to toggling graticule visibility, bc it doesn't toggle on if it didn't start visible.
-    const graticuleButton = document.createElement("div");
-    graticuleButton.textContent = `Toggle Graticule${model.get("graticule") ? " ✓" : ""}`;
-    graticuleButton.addEventListener("click", () => {
-      if (graticule) {
-        const isShown = graticule.style.display === "none";
-        graticule.style.display = isShown ? "block" : "none";
-        model.set("graticule", isShown);
-        model.save_changes();
-        graticuleButton.textContent = `Toggle Graticule${isShown ? " ✓" : ""}`;
-      }
-    });
-    menuContent.appendChild(graticuleButton);
 
     el.appendChild(menuContent);
 
@@ -180,6 +167,7 @@ async function render({ model, el }) {
     line.setAttribute("stroke", style.stroke_color ?? "lightgray");
     line.setAttribute("stroke-width", style.weight ?? 1);
     line.setAttribute("stroke-opacity", style.stroke_opacity ?? 0.5);
+    if (style.hidden) line.style.display = "none";
     return line;
   }
 
@@ -199,6 +187,29 @@ async function render({ model, el }) {
     graticule = svg.appendChild(namedGroup("Graticule"));
     graticule.appendChild(graticuleMinor);
     graticule.appendChild(graticuleMajor);
+
+    // When the style hides both line sets, hide the group instead
+    if (
+      graticuleMajor.style.display === "none" &&
+      graticuleMinor.style.display === "none"
+    ) {
+      graticule.style.display = "none";
+      graticuleMajor.style.display = "";
+      graticuleMinor.style.display = "";
+    }
+
+    if (menuContent) {
+      const graticuleLabel = () =>
+        `Toggle Graticule${graticule.style.display === "none" ? "" : " ✓"}`;
+      const graticuleButton = document.createElement("div");
+      graticuleButton.textContent = graticuleLabel();
+      graticuleButton.addEventListener("click", () => {
+        graticule.style.display =
+          graticule.style.display === "none" ? "" : "none";
+        graticuleButton.textContent = graticuleLabel();
+      });
+      menuContent.appendChild(graticuleButton);
+    }
   }
 
   let layerGroups = [];
@@ -219,6 +230,7 @@ async function render({ model, el }) {
         layer.setAttribute("stroke-width", style.weight || 3);
         layer.setAttribute("stroke-opacity", style.stroke_opacity || 1.0);
         layer.setAttribute("fill-opacity", style.fill_opacity || 0.2);
+        if (style.hidden) layer.style.display = "none";
         layerGroup.appendChild(layer);
       }
       svg.insertBefore(layerGroup, graticule);
