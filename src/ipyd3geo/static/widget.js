@@ -172,8 +172,10 @@ async function render({ model, el }) {
   graticuleGen.extentMinor(extentMinor).extentMajor(emptyExtent);
   const graticuleMinorGeometry = graticuleGen();
 
-  function graticuleLine(style) {
+  function graticuleLine(name, style) {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("id", name);
+    line.setAttributeNS(INKSCAPE_NS, "inkscape:label", name);
     line.setAttribute("fill", "none");
     line.setAttribute("stroke", style.stroke_color ?? "lightgray");
     line.setAttribute("stroke-width", style.weight ?? 1);
@@ -186,11 +188,11 @@ async function render({ model, el }) {
   let graticuleMinor = null;
   if (model.get("graticule")) {
     const graticuleStyle = model.get("graticule_style");
-    graticuleMajor = graticuleLine({
+    graticuleMajor = graticuleLine("major_graticule", {
       ...graticuleStyle,
       ...model.get("graticule_style_major"),
     });
-    graticuleMinor = graticuleLine({
+    graticuleMinor = graticuleLine("minor_graticule", {
       ...graticuleStyle,
       ...model.get("graticule_style_minor"),
     });
