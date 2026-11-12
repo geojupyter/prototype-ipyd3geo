@@ -145,6 +145,8 @@ class Map(anywidget.AnyWidget):
         sync=True
     )
     graticule_style = traitlets.Dict().tag(sync=True)
+    graticule_style_major = traitlets.Dict().tag(sync=True)
+    graticule_style_minor = traitlets.Dict().tag(sync=True)
 
     class Export:
         """Export helpers for a map."""
@@ -216,6 +218,8 @@ class Map(anywidget.AnyWidget):
             self.graticule_extent_minor = graticule.graticule_extent_minor
             self.graticule_precision = graticule.graticule_precision
             self.graticule_style = graticule.graticule_style
+            self.graticule_style_major = graticule.graticule_style_major
+            self.graticule_style_minor = graticule.graticule_style_minor
         else:
             self.graticule = graticule
         self.border = border
@@ -424,6 +428,10 @@ class Graticule:
         style (VectorStyle): The style of the graticule lines. Only stroke-related
             attributes are used, and callables are not supported.
             Defaults to light gray at half opacity.
+        style_major (VectorStyle): The style of the major graticule lines.
+            Attributes it sets override style.
+        style_minor (VectorStyle): The style of the minor graticule lines.
+            Attributes it sets override style.
     """
 
     DEFAULT_STEP_MAJOR: tuple[float, float] = (90, 360)
@@ -481,7 +489,23 @@ class Graticule:
         self.graticule_precision = (
             precision if precision is not None else self.DEFAULT_PRECISION
         )
-        self.graticule_style = style.resolve({}) if style is not None else {}
+        self.graticule_style = self._set_attributes(style)
+        self.graticule_style_major = self._set_attributes(style_major)
+        self.graticule_style_minor = self._set_attributes(style_minor)
+
+    def _set_attributes(self, style: VectorStyle | None) -> dict:
+        """Return the attributes explicitly set on a style."""
+        if style is None:
+            return {}
+        set_attributes = {}
+        for attribute, value in vars(style).items():
+            if value is None:
+                continue
+            if callable(value):
+                msg = "Graticule styles do not support callables"
+                raise TypeError(msg)
+            set_attributes[attribute] = value
+        return set_attributes
 
 
 class VectorStyle:

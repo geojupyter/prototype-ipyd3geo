@@ -163,23 +163,40 @@ async function render({ model, el }) {
   if (graticuleExtentMinor) graticuleGen.extentMinor(graticuleExtentMinor);
   const graticulePrecision = model.get("graticule_precision");
   if (graticulePrecision != null) graticuleGen.precision(graticulePrecision);
-  const graticuleGeometry = graticuleGen();
+  const emptyExtent = [
+    [0, 0],
+    [0, 0],
+  ];
+  const extentMinor = graticuleGen.extentMinor();
+  const graticuleMajorGeometry = graticuleGen.extentMinor(emptyExtent)();
+  graticuleGen.extentMinor(extentMinor).extentMajor(emptyExtent);
+  const graticuleMinorGeometry = graticuleGen();
+
+  function graticuleLine(style) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke", style.stroke_color ?? "lightgray");
+    line.setAttribute("stroke-width", style.weight ?? 1);
+    line.setAttribute("stroke-opacity", style.stroke_opacity ?? 0.5);
+    return line;
+  }
 
   let graticule = null;
+  let graticuleMajor = null;
+  let graticuleMinor = null;
   if (model.get("graticule")) {
-    graticule = document.createElementNS("http://www.w3.org/2000/svg", "path");
     const graticuleStyle = model.get("graticule_style");
-    graticule.setAttribute("fill", "none");
-    graticule.setAttribute(
-      "stroke",
-      graticuleStyle.stroke_color ?? "lightgray",
-    );
-    graticule.setAttribute("stroke-width", graticuleStyle.weight ?? 1);
-    graticule.setAttribute(
-      "stroke-opacity",
-      graticuleStyle.stroke_opacity ?? 0.5,
-    );
-    svg.appendChild(namedGroup("Graticule")).appendChild(graticule);
+    graticuleMajor = graticuleLine({
+      ...graticuleStyle,
+      ...model.get("graticule_style_major"),
+    });
+    graticuleMinor = graticuleLine({
+      ...graticuleStyle,
+      ...model.get("graticule_style_minor"),
+    });
+    graticule = svg.appendChild(namedGroup("Graticule"));
+    graticule.appendChild(graticuleMinor);
+    graticule.appendChild(graticuleMajor);
   }
 
   let layerGroups = [];
@@ -202,7 +219,7 @@ async function render({ model, el }) {
         layer.setAttribute("fill-opacity", style.fill_opacity || 0.2);
         layerGroup.appendChild(layer);
       }
-      svg.insertBefore(layerGroup, graticule?.parentNode ?? null);
+      svg.insertBefore(layerGroup, graticule);
       return layerGroup;
     });
   }
@@ -213,7 +230,10 @@ async function render({ model, el }) {
   function redraw() {
     sphere.setAttribute("d", path({ type: "Sphere" }));
     if (naturalEarth) naturalEarth.setAttribute("d", path(countries));
-    if (graticule) graticule.setAttribute("d", path(graticuleGeometry));
+    if (graticule) {
+      graticuleMajor.setAttribute("d", path(graticuleMajorGeometry));
+      graticuleMinor.setAttribute("d", path(graticuleMinorGeometry));
+    }
     drawLayers();
   }
   redraw();
