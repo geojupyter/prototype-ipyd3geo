@@ -17,12 +17,13 @@ function namedGroup(name) {
 }
 
 async function render({ model, el }) {
+  let menuContent = null;
   if (model.get("hamburger")) {
     const menuButton = document.createElement("button");
     menuButton.textContent = "☰";
     menuButton.style.display = "block";
     el.appendChild(menuButton);
-    const menuContent = document.createElement("div");
+    menuContent = document.createElement("div");
     menuContent.style.display = "none";
     menuContent.style.position = "absolute";
     menuContent.style.color = "black";
@@ -44,20 +45,6 @@ async function render({ model, el }) {
       URL.revokeObjectURL(url);
     });
     menuContent.appendChild(exportSvgButton);
-
-    //TODO this is the wrong approach to toggling graticule visibility, bc it doesn't toggle on if it didn't start visible.
-    const graticuleButton = document.createElement("div");
-    graticuleButton.textContent = `Toggle Graticule${model.get("graticule") ? " ✓" : ""}`;
-    graticuleButton.addEventListener("click", () => {
-      if (graticule) {
-        const isShown = graticule.style.display === "none";
-        graticule.style.display = isShown ? "block" : "none";
-        model.set("graticule", isShown);
-        model.save_changes();
-        graticuleButton.textContent = `Toggle Graticule${isShown ? " ✓" : ""}`;
-      }
-    });
-    menuContent.appendChild(graticuleButton);
 
     el.appendChild(menuContent);
 
@@ -200,6 +187,29 @@ async function render({ model, el }) {
     graticule = svg.appendChild(namedGroup("Graticule"));
     graticule.appendChild(graticuleMinor);
     graticule.appendChild(graticuleMajor);
+
+    if (menuContent) {
+      // When the style hides both line sets, hide the group instead so the
+      // toggle can show them again.
+      if (
+        graticuleMajor.style.display === "none" &&
+        graticuleMinor.style.display === "none"
+      ) {
+        graticule.style.display = "none";
+        graticuleMajor.style.display = "";
+        graticuleMinor.style.display = "";
+      }
+      const graticuleLabel = () =>
+        `Toggle Graticule${graticule.style.display === "none" ? "" : " ✓"}`;
+      const graticuleButton = document.createElement("div");
+      graticuleButton.textContent = graticuleLabel();
+      graticuleButton.addEventListener("click", () => {
+        graticule.style.display =
+          graticule.style.display === "none" ? "" : "none";
+        graticuleButton.textContent = graticuleLabel();
+      });
+      menuContent.appendChild(graticuleButton);
+    }
   }
 
   let layerGroups = [];
