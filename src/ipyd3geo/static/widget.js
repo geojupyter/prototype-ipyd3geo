@@ -219,6 +219,7 @@ async function render({ model, el }) {
         layer.setAttribute("stroke-width", style.weight || 3);
         layer.setAttribute("stroke-opacity", style.stroke_opacity || 1.0);
         layer.setAttribute("fill-opacity", style.fill_opacity || 0.2);
+        if (style.hidden) layer.style.display = "none";
         layerGroup.appendChild(layer);
       }
       svg.insertBefore(layerGroup, graticule);
