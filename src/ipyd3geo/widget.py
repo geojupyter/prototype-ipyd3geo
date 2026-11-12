@@ -415,6 +415,9 @@ class Graticule:
         step (tuple[float, float]): The step size for the graticule lines.
         extent (tuple[tuple[float, float], tuple[float, float]]): The extent of
             the graticule lines.
+        style (VectorStyle): The style of the graticule lines. Only stroke-related
+            attributes are used, and callables are not supported.
+            Defaults to light gray at half opacity.
         step_major (tuple[float, float]): The step size for the major
             graticule lines (overrides step).
         step_minor (tuple[float, float]): The step size for the minor
@@ -425,9 +428,6 @@ class Graticule:
             the minor graticule lines (overrides extent).
         precision (float): The precision of projected curves in the
             graticule lines in degrees.
-        style (VectorStyle): The style of the graticule lines. Only stroke-related
-            attributes are used, and callables are not supported.
-            Defaults to light gray at half opacity.
         style_major (VectorStyle): The style of the major graticule lines.
             Attributes it sets override style.
         style_minor (VectorStyle): The style of the minor graticule lines.
