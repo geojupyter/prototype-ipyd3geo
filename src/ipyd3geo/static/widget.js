@@ -188,17 +188,18 @@ async function render({ model, el }) {
     graticule.appendChild(graticuleMinor);
     graticule.appendChild(graticuleMajor);
 
+    // When the style hides both line sets, hide the group instead so the
+    // toggle can show them again.
+    if (
+      graticuleMajor.style.display === "none" &&
+      graticuleMinor.style.display === "none"
+    ) {
+      graticule.style.display = "none";
+      graticuleMajor.style.display = "";
+      graticuleMinor.style.display = "";
+    }
+
     if (menuContent) {
-      // When the style hides both line sets, hide the group instead so the
-      // toggle can show them again.
-      if (
-        graticuleMajor.style.display === "none" &&
-        graticuleMinor.style.display === "none"
-      ) {
-        graticule.style.display = "none";
-        graticuleMajor.style.display = "";
-        graticuleMinor.style.display = "";
-      }
       const graticuleLabel = () =>
         `Toggle Graticule${graticule.style.display === "none" ? "" : " ✓"}`;
       const graticuleButton = document.createElement("div");
