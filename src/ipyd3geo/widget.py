@@ -533,7 +533,7 @@ class VectorStyle:
         "hidden": False,
     }
 
-    # Bypassing Ruff checks for too many positional argument, and too many arguments.
+    # Bypassing Ruff checks for too many arguments.
     # makes sense here because many arguments are needed to configure layer styling
     def __init__(  # noqa: PLR0913
         self,
