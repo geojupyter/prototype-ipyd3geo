@@ -180,6 +180,7 @@ async function render({ model, el }) {
     line.setAttribute("stroke", style.stroke_color ?? "lightgray");
     line.setAttribute("stroke-width", style.weight ?? 1);
     line.setAttribute("stroke-opacity", style.stroke_opacity ?? 0.5);
+    if (style.hidden) line.style.display = "none";
     return line;
   }
 
