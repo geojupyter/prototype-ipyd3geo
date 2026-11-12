@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "esbuild js/widget.js --bundle --format=esm --minify --outfile=src/ipyd3geo/static/widget.js",
+    "dev": "esbuild js/widget.js --bundle --format=esm --sourcemap=inline --watch --outfile=src/ipyd3geo/static/widget.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

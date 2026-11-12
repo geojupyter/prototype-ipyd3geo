@@ -29,6 +29,9 @@ Issues = "https://github.com/geojupyter/prototype-ipyd3geo/issues"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+artifacts = ["src/ipyd3geo/static/"]
+
 [tool.hatch.build.targets.sdist]
 include = [
     "src/ipyd3geo",
