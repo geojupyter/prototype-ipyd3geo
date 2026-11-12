@@ -12,7 +12,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^11.17.0",
+      "version": "11.17.0",
       "onFail": "download"
     }
   },
@@ -20,7 +20,9 @@
   "dependencies": {
     "d3-geo": "^3.1.1",
     "d3-geo-polygon": "^2.0.1",
-    "d3-geo-projection": "^4.0.0"
+    "d3-geo-projection": "^4.0.0",
+    "d3-selection": "^3.0.1",
+    "d3-zoom": "^3.0.1"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
