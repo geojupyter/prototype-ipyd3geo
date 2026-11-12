@@ -412,7 +412,8 @@ class Graticule:
     """Configures the graticule for the map widget.
 
     Args:
-        step (tuple[float, float]): The step size for the graticule lines.
+        step (tuple[float, float]): The step size for the graticule lines. Specifying
+            step alone produces no minor lines, only major lines.
         extent (tuple[tuple[float, float], tuple[float, float]]): The extent of
             the graticule lines.
         style (VectorStyle): The style of the graticule lines. Only stroke-related
