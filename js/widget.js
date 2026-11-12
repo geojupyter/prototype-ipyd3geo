@@ -1,8 +1,8 @@
-import * as d3geo from "https://esm.sh/d3-geo@3.1.1";
-import * as d3geoProjection from "https://esm.sh/d3-geo-projection@4.0.0";
-import * as d3geoPolygon from "https://esm.sh/d3-geo-polygon@2.0.1";
-import { zoom } from "https://esm.sh/d3-zoom@3.0.0";
-import { select } from "https://esm.sh/d3-selection@3.0.0";
+import * as d3geo from "d3-geo";
+import * as d3geoProjection from "d3-geo-projection";
+import * as d3geoPolygon from "d3-geo-polygon";
+import { zoom } from "d3-zoom";
+import { select } from "d3-selection";
 
 const d3 = { ...d3geo, ...d3geoProjection, ...d3geoPolygon };
 
