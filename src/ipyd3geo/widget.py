@@ -210,16 +210,16 @@ class Map(anywidget.AnyWidget):
         self.projection_tilt = projection.tilt
         if isinstance(graticule, Graticule):
             self.graticule = True
-            self.graticule_step = graticule.graticule_step
-            self.graticule_extent = graticule.graticule_extent
-            self.graticule_step_major = graticule.graticule_step_major
-            self.graticule_step_minor = graticule.graticule_step_minor
-            self.graticule_extent_major = graticule.graticule_extent_major
-            self.graticule_extent_minor = graticule.graticule_extent_minor
-            self.graticule_precision = graticule.graticule_precision
-            self.graticule_style = graticule.graticule_style
-            self.graticule_style_major = graticule.graticule_style_major
-            self.graticule_style_minor = graticule.graticule_style_minor
+            self.graticule_step = graticule.step
+            self.graticule_extent = graticule.extent
+            self.graticule_step_major = graticule.step_major
+            self.graticule_step_minor = graticule.step_minor
+            self.graticule_extent_major = graticule.extent_major
+            self.graticule_extent_minor = graticule.extent_minor
+            self.graticule_precision = graticule.precision
+            self.graticule_style = graticule.style
+            self.graticule_style_major = graticule.style_major
+            self.graticule_style_minor = graticule.style_minor
         else:
             self.graticule = graticule
         self.border = border
@@ -462,36 +462,34 @@ class Graticule:
         style_major: VectorStyle | None = None,
         style_minor: VectorStyle | None = None,
     ) -> None:
-        self.graticule_step = step
+        self.step = step
         if step is not None:
-            self.graticule_step_major = step_major
-            self.graticule_step_minor = step_minor
+            self.step_major = step_major
+            self.step_minor = step_minor
         else:
-            self.graticule_step_major = (
+            self.step_major = (
                 step_major if step_major is not None else self.DEFAULT_STEP_MAJOR
             )
-            self.graticule_step_minor = (
+            self.step_minor = (
                 step_minor if step_minor is not None else self.DEFAULT_STEP_MINOR
             )
 
-        self.graticule_extent = extent
+        self.extent = extent
         if extent is not None:
-            self.graticule_extent_major = extent_major
-            self.graticule_extent_minor = extent_minor
+            self.extent_major = extent_major
+            self.extent_minor = extent_minor
         else:
-            self.graticule_extent_major = (
+            self.extent_major = (
                 extent_major if extent_major is not None else self.DEFAULT_EXTENT_MAJOR
             )
-            self.graticule_extent_minor = (
+            self.extent_minor = (
                 extent_minor if extent_minor is not None else self.DEFAULT_EXTENT_MINOR
             )
 
-        self.graticule_precision = (
-            precision if precision is not None else self.DEFAULT_PRECISION
-        )
-        self.graticule_style = self._set_attributes(style)
-        self.graticule_style_major = self._set_attributes(style_major)
-        self.graticule_style_minor = self._set_attributes(style_minor)
+        self.precision = precision if precision is not None else self.DEFAULT_PRECISION
+        self.style = self._set_attributes(style)
+        self.style_major = self._set_attributes(style_major)
+        self.style_minor = self._set_attributes(style_minor)
 
     def _set_attributes(self, style: VectorStyle | None) -> dict:
         """Return the attributes explicitly set on a style."""
