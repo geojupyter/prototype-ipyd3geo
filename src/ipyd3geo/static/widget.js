@@ -148,6 +148,23 @@ async function render({ model, el }) {
     svg.appendChild(namedGroup("Basemap")).appendChild(naturalEarth);
   }
 
+  const graticuleGen = d3.geoGraticule();
+  const graticuleStep = model.get("graticule_step");
+  if (graticuleStep) graticuleGen.step(graticuleStep);
+  const graticuleExtent = model.get("graticule_extent");
+  if (graticuleExtent) graticuleGen.extent(graticuleExtent);
+  const graticuleStepMajor = model.get("graticule_step_major");
+  if (graticuleStepMajor) graticuleGen.stepMajor(graticuleStepMajor);
+  const graticuleStepMinor = model.get("graticule_step_minor");
+  if (graticuleStepMinor) graticuleGen.stepMinor(graticuleStepMinor);
+  const graticuleExtentMajor = model.get("graticule_extent_major");
+  if (graticuleExtentMajor) graticuleGen.extentMajor(graticuleExtentMajor);
+  const graticuleExtentMinor = model.get("graticule_extent_minor");
+  if (graticuleExtentMinor) graticuleGen.extentMinor(graticuleExtentMinor);
+  const graticulePrecision = model.get("graticule_precision");
+  if (graticulePrecision != null) graticuleGen.precision(graticulePrecision);
+  const graticuleGeometry = graticuleGen();
+
   let graticule = null;
   if (model.get("graticule")) {
     graticule = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -188,7 +205,7 @@ async function render({ model, el }) {
   function redraw() {
     sphere.setAttribute("d", path({ type: "Sphere" }));
     if (naturalEarth) naturalEarth.setAttribute("d", path(countries));
-    if (graticule) graticule.setAttribute("d", path(d3.geoGraticule()()));
+    if (graticule) graticule.setAttribute("d", path(graticuleGeometry));
     drawLayers();
   }
   redraw();
