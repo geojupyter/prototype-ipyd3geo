@@ -6,7 +6,7 @@ import inspect
 import json
 import pathlib
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import anywidget
 import traitlets
@@ -491,24 +491,33 @@ class VectorStyle:
     properties and returns the value for that feature.
 
     Args:
-        stroke_color (str or callable): The stroke color.
-        fill_color (str or callable): The fill color.
-        weight (float or callable): The stroke width.
-        stroke_opacity (float or callable): The stroke opacity.
-        fill_opacity (float or callable): The fill opacity.
+        stroke_color (str or callable): The stroke color. Defaults to "#000000".
+        fill_color (str or callable): The fill color. Defaults to "#ffffff".
+        weight (float or callable): The stroke width. Defaults to 3.
+        stroke_opacity (float or callable): The stroke opacity. Defaults to 1.0.
+        fill_opacity (float or callable): The fill opacity. Defaults to 1.0.
         point_radius (float or callable): Point radius in pixels. Defaults to 4.5.
     """
+
+    DEFAULTS: ClassVar[dict] = {
+        "stroke_color": "#000000",
+        "fill_color": "#ffffff",
+        "weight": 3,
+        "stroke_opacity": 1.0,
+        "fill_opacity": 1.0,
+        "point_radius": 4.5,
+    }
 
     # Bypassing Ruff checks for too many positional argument, and too many arguments.
     # makes sense here because many arguments are needed to configure layer styling
     def __init__(  # noqa: PLR0913, PLR0917
         self,
-        stroke_color: str | Callable[[dict], str] = "#000000",
-        fill_color: str | Callable[[dict], str] = "#ffffff",
-        weight: float | Callable[[dict], float] = 3,
-        stroke_opacity: float | Callable[[dict], float] = 1.0,
-        fill_opacity: float | Callable[[dict], float] = 1.0,
-        point_radius: float | Callable[[dict], float] = 4.5,
+        stroke_color: str | Callable[[dict], str] | None = None,
+        fill_color: str | Callable[[dict], str] | None = None,
+        weight: float | Callable[[dict], float] | None = None,
+        stroke_opacity: float | Callable[[dict], float] | None = None,
+        fill_opacity: float | Callable[[dict], float] | None = None,
+        point_radius: float | Callable[[dict], float] | None = None,
     ) -> None:
         self.stroke_color = stroke_color
         self.fill_color = fill_color
@@ -520,11 +529,13 @@ class VectorStyle:
     def resolve(self, properties: dict) -> dict:
         """Return the concrete style for one feature.
 
-        Callables receive the feature's properties.
+        Callables receive the feature's properties. Unset attributes take their
+        default values.
         """
+        set_attributes = {k: v for k, v in vars(self).items() if v is not None}
         return {
             attribute: value(properties) if callable(value) else value
-            for attribute, value in vars(self).items()
+            for attribute, value in {**self.DEFAULTS, **set_attributes}.items()
         }
 
 
