@@ -49,10 +49,14 @@ uv add ipyd3geo
 ## Development
 
 ```sh
+## Initial setup:
 uv sync
 pnpm install
-uv run pre-commit install ## Run ruff and prettier automatically on every commit
+uv run pre-commit install ## Run linters on every commit
 uv run pre-commit run --all-files ## Run the linters manually
+
+## To test any change, run this, then restart your Jupyter kernel:
+pnpm build
 ```
 
 Our AI/LLM contribution policy matches that of [JupyterHub](https://compass.hub.jupyter.org/contribute/llm/). Please review it before opening a PR.
