@@ -474,8 +474,6 @@ class Graticule:
             precision if precision is not None else self.DEFAULT_PRECISION
         )
 
-        raise NotImplementedError
-
 
 class VectorStyle:
     """Style for vector features.
