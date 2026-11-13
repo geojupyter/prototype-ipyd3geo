@@ -26,12 +26,30 @@ Repository = "https://github.com/geojupyter/prototype-ipyd3geo"
 Issues = "https://github.com/geojupyter/prototype-ipyd3geo/issues"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-jupyter-builder>=0.10.0"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+artifacts = ["src/ipyd3geo/static/"]
+
+[tool.hatch.build.hooks.jupyter-builder]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = ["src/ipyd3geo/static/widget.js"]
+optional-editable-build = "true"
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+npm = "pnpm"
+build_cmd = "build"
+build_dir = "src/ipyd3geo/static"
+source_dir = "js"
 
 [tool.hatch.build.targets.sdist]
 include = [
     "src/ipyd3geo",
+    "js",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
     "LICENSE",
     "README.md",
     "pyproject.toml",
@@ -42,6 +60,7 @@ dev = [
     "geopandas>=1.1.4",
     "ipykernel>=7.3.0",
     "jupyterlab>=4.6.4",
+    "nbmake>=1.5.5",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
 ]
