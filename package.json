@@ -1,15 +1,21 @@
 {
   "name": "ipyd3geo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "An interactive map widget for Jupyter that uses D3 Geo as its renderer.",
   "scripts": {
     "build": "esbuild js/widget.js --bundle --format=esm --minify --outfile=src/ipyd3geo/static/widget.js",
-    "dev": "esbuild js/widget.js --bundle --format=esm --sourcemap=inline --watch --outfile=src/ipyd3geo/static/widget.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "esbuild js/widget.js --bundle --format=esm --sourcemap=inline --watch --outfile=src/ipyd3geo/static/widget.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "jupyter",
+    "widget",
+    "anywidget",
+    "d3",
+    "d3-geo",
+    "map",
+    "gis"
+  ],
+  "author": "Benjamin Szeghy",
   "license": "BSD-3-Clause",
   "devEngines": {
     "packageManager": {

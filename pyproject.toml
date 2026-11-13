@@ -46,6 +46,10 @@ source_dir = "js"
 [tool.hatch.build.targets.sdist]
 include = [
     "src/ipyd3geo",
+    "js",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
     "LICENSE",
     "README.md",
     "pyproject.toml",
