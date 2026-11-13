@@ -60,6 +60,7 @@ dev = [
     "geopandas>=1.1.4",
     "ipykernel>=7.3.0",
     "jupyterlab>=4.6.4",
+    "nbmake>=1.5.5",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
 ]

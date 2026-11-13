@@ -20,3 +20,16 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: astral-sh/setup-uv@v6
       - run: uv build
+
+  test-notebook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v6
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run pytest --nbmake examples/
