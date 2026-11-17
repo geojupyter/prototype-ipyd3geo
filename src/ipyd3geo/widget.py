@@ -9,6 +9,8 @@ import warnings
 from typing import TYPE_CHECKING, ClassVar
 
 import anywidget
+import numpy as np
+import tifffile
 import traitlets
 
 from .jgis import read_layers
@@ -698,8 +700,66 @@ class Raster(Layer):
     **Not implemented yet.**
     """
 
-    def __init__(self, data: str | pathlib.Path, name: str = "") -> None:
-        raise NotImplementedError
+    def __init__(self, data: str | pathlib.Path, name: str = "", dpi: int = 96) -> None:
+        super().__init__(name)
+        try:
+            tif = tifffile.TiffFile(data)
+        except tifffile.TiffFileError as e:
+            msg = f"{data} is not a TIFF file. Only GeoTIFF files are supported."
+            raise ValueError(msg) from e
+        with tif:
+            if not tif.is_geotiff:
+                msg = (
+                    f"{data} is a TIFF but not a GeoTIFF (it has no georeferencing "
+                    "tags). Only GeoTIFF files are supported."
+                )
+                raise ValueError(msg)
+            # using magic number 4326 for WGS84, see https://www.iana.org/assignments/geo-keys/geo-keys.xhtml
+            if tif.geotiff_metadata.get("GeographicTypeGeoKey") != 4326:  # noqa: PLR2004
+                msg = (
+                    f"{data} is a GeoTIFF but not in WGS84 (EPSG:4326). Only "
+                    "GeoTIFFs in WGS84 are supported. learn more"
+                    # TODO: add a docs page about projection with rasters.
+                    "[here]()"
+                )
+                raise ValueError(msg)
+            meta = tif.geotiff_metadata
+            page = tif.pages[0]
+            image = page.asarray()
+            if page.axes.startswith("S"):  # bands stored as separate planes
+                image = np.moveaxis(image, 0, -1)
+            nodata_tag = page.tags.get("GDAL_NODATA")
+            nodata = float(nodata_tag.value) if nodata_tag else None
+        # Pixel (col, row) -> (lon, lat): lon = west + col * dx, lat = north - row * dy
+        dx, dy = meta["ModelPixelScale"][:2]
+        i, j, _, lon0, lat0, _ = meta["ModelTiepoint"][:6]
+        west, north = lon0 - i * dx, lat0 + j * dy
+        height, width = image.shape[:2]
+
+        # Convert any GeoTIFF to 8-bit RGBA so the browser only handles one format.
+        if image.ndim == 2:  # noqa: PLR2004
+            image = image[..., np.newaxis]
+        rgb = image[..., :3] if image.shape[-1] >= 3 else image[..., :1].repeat(3, -1)  # noqa: PLR2004
+        rgb = rgb.astype(np.float64)
+        missing = np.isnan(rgb).any(axis=-1)
+        if nodata is not None:
+            missing |= (image == nodata).all(axis=-1)
+        if image.dtype != np.uint8:
+            # Stretch the data's range to 0-255.
+            valid = rgb[~missing]
+            lo, hi = (valid.min(), valid.max()) if valid.size else (0, 1)
+            rgb = (rgb - lo) / ((hi - lo) or 1) * 255
+        alpha = np.where(missing, 0, 255)[..., np.newaxis]
+        rgba = np.concatenate([np.nan_to_num(rgb), alpha], axis=-1).astype(np.uint8)
+
+        self.data = {
+            "type": "Raster",
+            "name": name,
+            "width": width,
+            "height": height,
+            "bounds": [west, north - height * dy, west + width * dx, north],
+            "pixels": rgba.tobytes(),
+        }
 
 
 class TileService(Layer):
