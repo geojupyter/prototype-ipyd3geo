@@ -44,6 +44,10 @@ class Map(anywidget.AnyWidget):
 
     _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
 
+    zoom = traitlets.Float(1.0).tag(sync=True)
+    center = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), default_value=(0.0, 0.0)
+    ).tag(sync=True)
     projection = traitlets.Unicode("geoEqualEarth").tag(sync=True)
     border = traitlets.Bool(default_value=True).tag(sync=True)
     graticule = traitlets.Bool(default_value=False).tag(sync=True)
@@ -177,8 +181,10 @@ class Map(anywidget.AnyWidget):
         hamburger: bool = True,
         dynamic: bool | str = True,
     ) -> None:
-        if center != (0.0, 0.0) or zoom != 1.0:
-            raise NotImplementedError
+        self.center = center
+        self.zoom = zoom
+        if zoom != 1.0:
+            pass
         if projection is None:
             projection = Projection()
         elif isinstance(projection, str):
