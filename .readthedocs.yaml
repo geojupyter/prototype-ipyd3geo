@@ -4,8 +4,10 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
+    nodejs: "24"
   jobs:
     pre_create_environment:
+      - npm install -g pnpm@11.17.0
       - asdf plugin add uv
       - asdf install uv latest
       - asdf global uv latest

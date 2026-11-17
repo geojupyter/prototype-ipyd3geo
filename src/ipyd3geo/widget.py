@@ -6,7 +6,7 @@ import inspect
 import json
 import pathlib
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import anywidget
 import numpy as np
@@ -116,6 +116,39 @@ class Map(anywidget.AnyWidget):
     dynamic = traitlets.Unicode("pan").tag(sync=True)
     basemap = traitlets.Unicode("").tag(sync=True)
     hamburger = traitlets.Bool(default_value=True).tag(sync=True)
+    graticule_step = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
+    graticule_extent = traitlets.Tuple(
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        allow_none=True,
+        default_value=None,
+    ).tag(sync=True)
+    graticule_step_major = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
+    graticule_step_minor = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
+    graticule_extent_major = traitlets.Tuple(
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        allow_none=True,
+        default_value=None,
+    ).tag(sync=True)
+    graticule_extent_minor = traitlets.Tuple(
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        traitlets.Tuple(traitlets.Float(), traitlets.Float()),
+        allow_none=True,
+        default_value=None,
+    ).tag(sync=True)
+    graticule_precision = traitlets.Float(allow_none=True, default_value=None).tag(
+        sync=True
+    )
+    graticule_style = traitlets.Dict().tag(sync=True)
+    graticule_style_major = traitlets.Dict().tag(sync=True)
+    graticule_style_minor = traitlets.Dict().tag(sync=True)
 
     class Export:
         """Export helpers for a map."""
@@ -140,7 +173,7 @@ class Map(anywidget.AnyWidget):
         zoom: float = 1.0,
         projection: Projection | str | None = None,
         *,
-        graticule: bool = False,
+        graticule: bool | Graticule = False,
         border: bool = True,
         basemap: bool | str = False,
         hamburger: bool = True,
@@ -177,8 +210,21 @@ class Map(anywidget.AnyWidget):
         self.projection_shift = projection.shift
         self.projection_spacing = projection.spacing
         self.projection_tilt = projection.tilt
+        if isinstance(graticule, Graticule):
+            self.graticule = True
+            self.graticule_step = graticule.step
+            self.graticule_extent = graticule.extent
+            self.graticule_step_major = graticule.step_major
+            self.graticule_step_minor = graticule.step_minor
+            self.graticule_extent_major = graticule.extent_major
+            self.graticule_extent_minor = graticule.extent_minor
+            self.graticule_precision = graticule.precision
+            self.graticule_style = graticule.style
+            self.graticule_style_major = graticule.style_major
+            self.graticule_style_minor = graticule.style_minor
+        else:
+            self.graticule = graticule
         self.border = border
-        self.graticule = graticule
         if basemap in {"naturalearth", True}:
             self.basemap = "naturalearth"
         elif basemap is False:
@@ -202,7 +248,7 @@ class Map(anywidget.AnyWidget):
 
     def add(self, layer: Layer) -> None:
         """Add a layer to the map. Only GeoJSON layers are supported so far."""
-        self.layers = [*self.layers, layer.data]
+        self.layers = [*self.layers, {"name": layer.name, "data": layer.data}]
 
     def add_from_jgis(
         self,
@@ -364,6 +410,105 @@ class Projection:
         self.tilt = tilt
 
 
+class Graticule:
+    """Configures the graticule for the map widget.
+
+    Args:
+        step (tuple[float, float]): The step size for the graticule lines. Specifying
+            step alone produces no minor lines, only major lines.
+        extent (tuple[tuple[float, float], tuple[float, float]]): The extent of
+            the graticule lines.
+        style (VectorStyle): The style of the graticule lines. Only stroke-related
+            attributes are used, and callables are not supported.
+            Defaults to light gray at half opacity.
+        step_major (tuple[float, float]): The step size for the major
+            graticule lines (overrides step).
+        step_minor (tuple[float, float]): The step size for the minor
+            graticule lines (overrides step).
+        extent_major (tuple[tuple[float, float], tuple[float, float]]): The extent of
+            the major graticule lines (overrides extent).
+        extent_minor (tuple[tuple[float, float], tuple[float, float]]): The extent of
+            the minor graticule lines (overrides extent).
+        precision (float): The precision of projected curves in the
+            graticule lines in degrees.
+        style_major (VectorStyle): The style of the major graticule lines.
+            Attributes it sets override style.
+        style_minor (VectorStyle): The style of the minor graticule lines.
+            Attributes it sets override style.
+    """
+
+    DEFAULT_STEP_MAJOR: tuple[float, float] = (90, 360)
+    DEFAULT_STEP_MINOR: tuple[float, float] = (10, 10)
+    DEFAULT_EXTENT_MAJOR: tuple[tuple[float, float], tuple[float, float]] = (
+        (-180, -90 + 1e-6),
+        (180, 90 - 1e-6),
+    )
+    DEFAULT_EXTENT_MINOR: tuple[tuple[float, float], tuple[float, float]] = (
+        (-180, -80 - 1e-6),
+        (180, 80 + 1e-6),
+    )
+    DEFAULT_PRECISION: float = 2.5
+
+    # Each graticule-specific option from d3-geo is its own keyword-only
+    # argument, mirroring the documented public API.
+    def __init__(  # noqa: PLR0913
+        self,
+        step: tuple[float, float] | None = None,
+        extent: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        style: VectorStyle | None = None,
+        *,
+        step_major: tuple[float, float] | None = None,
+        step_minor: tuple[float, float] | None = None,
+        extent_major: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        extent_minor: tuple[tuple[float, float], tuple[float, float]] | None = None,
+        precision: float | None = None,
+        style_major: VectorStyle | None = None,
+        style_minor: VectorStyle | None = None,
+    ) -> None:
+        self.step = step
+        if step is not None:
+            self.step_major = step_major
+            self.step_minor = step_minor
+        else:
+            self.step_major = (
+                step_major if step_major is not None else self.DEFAULT_STEP_MAJOR
+            )
+            self.step_minor = (
+                step_minor if step_minor is not None else self.DEFAULT_STEP_MINOR
+            )
+
+        self.extent = extent
+        if extent is not None:
+            self.extent_major = extent_major
+            self.extent_minor = extent_minor
+        else:
+            self.extent_major = (
+                extent_major if extent_major is not None else self.DEFAULT_EXTENT_MAJOR
+            )
+            self.extent_minor = (
+                extent_minor if extent_minor is not None else self.DEFAULT_EXTENT_MINOR
+            )
+
+        self.precision = precision if precision is not None else self.DEFAULT_PRECISION
+        self.style = self._set_attributes(style)
+        self.style_major = self._set_attributes(style_major)
+        self.style_minor = self._set_attributes(style_minor)
+
+    def _set_attributes(self, style: VectorStyle | None) -> dict:
+        """Return the attributes explicitly set on a style."""
+        if style is None:
+            return {}
+        set_attributes = {}
+        for attribute, value in vars(style).items():
+            if value is None:
+                continue
+            if callable(value):
+                msg = "Graticule styles do not support callables"
+                raise TypeError(msg)
+            set_attributes[attribute] = value
+        return set_attributes
+
+
 class VectorStyle:
     """Style for vector features.
 
@@ -371,24 +516,37 @@ class VectorStyle:
     properties and returns the value for that feature.
 
     Args:
-        stroke_color (str or callable): The stroke color.
-        fill_color (str or callable): The fill color.
-        weight (float or callable): The stroke width.
-        stroke_opacity (float or callable): The stroke opacity.
-        fill_opacity (float or callable): The fill opacity.
+        stroke_color (str or callable): The stroke color. Defaults to "#000000".
+        fill_color (str or callable): The fill color. Defaults to "#ffffff".
+        weight (float or callable): The stroke width. Defaults to 3.
+        stroke_opacity (float or callable): The stroke opacity. Defaults to 1.0.
+        fill_opacity (float or callable): The fill opacity. Defaults to 1.0.
         point_radius (float or callable): Point radius in pixels. Defaults to 4.5.
+        hidden (bool or callable): Whether the feature is hidden. Defaults to False.
     """
 
-    # Bypassing Ruff checks for too many positional argument, and too many arguments.
+    DEFAULTS: ClassVar[dict] = {
+        "stroke_color": "#000000",
+        "fill_color": "#ffffff",
+        "weight": 3,
+        "stroke_opacity": 1.0,
+        "fill_opacity": 1.0,
+        "point_radius": 4.5,
+        "hidden": False,
+    }
+
+    # Bypassing Ruff checks for too many arguments.
     # makes sense here because many arguments are needed to configure layer styling
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(  # noqa: PLR0913
         self,
-        stroke_color: str | Callable[[dict], str] = "#000000",
-        fill_color: str | Callable[[dict], str] = "#ffffff",
-        weight: float | Callable[[dict], float] = 3,
-        stroke_opacity: float | Callable[[dict], float] = 1.0,
-        fill_opacity: float | Callable[[dict], float] = 1.0,
-        point_radius: float | Callable[[dict], float] = 4.5,
+        *,
+        stroke_color: str | Callable[[dict], str] | None = None,
+        fill_color: str | Callable[[dict], str] | None = None,
+        weight: float | Callable[[dict], float] | None = None,
+        stroke_opacity: float | Callable[[dict], float] | None = None,
+        fill_opacity: float | Callable[[dict], float] | None = None,
+        point_radius: float | Callable[[dict], float] | None = None,
+        hidden: bool | Callable[[dict], bool] | None = None,
     ) -> None:
         self.stroke_color = stroke_color
         self.fill_color = fill_color
@@ -396,15 +554,18 @@ class VectorStyle:
         self.stroke_opacity = stroke_opacity
         self.fill_opacity = fill_opacity
         self.point_radius = point_radius
+        self.hidden = hidden
 
     def resolve(self, properties: dict) -> dict:
         """Return the concrete style for one feature.
 
-        Callables receive the feature's properties.
+        Callables receive the feature's properties. Unset attributes take their
+        default values.
         """
+        set_attributes = {k: v for k, v in vars(self).items() if v is not None}
         return {
             attribute: value(properties) if callable(value) else value
-            for attribute, value in vars(self).items()
+            for attribute, value in {**self.DEFAULTS, **set_attributes}.items()
         }
 
 

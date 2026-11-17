@@ -1,8 +1,8 @@
-import * as d3geo from "https://esm.sh/d3-geo@3.1.1";
-import * as d3geoProjection from "https://esm.sh/d3-geo-projection@4.0.0";
-import * as d3geoPolygon from "https://esm.sh/d3-geo-polygon@2.0.1";
-import { zoom } from "https://esm.sh/d3-zoom@3.0.0";
-import { select } from "https://esm.sh/d3-selection@3.0.0";
+import * as d3geo from "d3-geo";
+import * as d3geoProjection from "d3-geo-projection";
+import * as d3geoPolygon from "d3-geo-polygon";
+import { zoom } from "d3-zoom";
+import { select } from "d3-selection";
 
 const d3 = { ...d3geo, ...d3geoProjection, ...d3geoPolygon };
 
@@ -43,13 +43,24 @@ function renderRaster(layer, projection) {
   return image;
 }
 
+const INKSCAPE_NS = "http://www.inkscape.org/namespaces/inkscape";
+
+function namedGroup(name) {
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  group.setAttribute("id", name);
+  group.setAttributeNS(INKSCAPE_NS, "inkscape:groupmode", "layer");
+  group.setAttributeNS(INKSCAPE_NS, "inkscape:label", name);
+  return group;
+}
+
 async function render({ model, el }) {
+  let menuContent = null;
   if (model.get("hamburger")) {
     const menuButton = document.createElement("button");
     menuButton.textContent = "☰";
     menuButton.style.display = "block";
     el.appendChild(menuButton);
-    const menuContent = document.createElement("div");
+    menuContent = document.createElement("div");
     menuContent.style.display = "none";
     menuContent.style.position = "absolute";
     menuContent.style.color = "black";
@@ -71,20 +82,6 @@ async function render({ model, el }) {
       URL.revokeObjectURL(url);
     });
     menuContent.appendChild(exportSvgButton);
-
-    //TODO this is the wrong approach to toggling graticule visibility, bc it doesn't toggle on if it didn't start visible.
-    const graticuleButton = document.createElement("div");
-    graticuleButton.textContent = `Toggle Graticule${model.get("graticule") ? " ✓" : ""}`;
-    graticuleButton.addEventListener("click", () => {
-      if (graticule) {
-        const isShown = graticule.style.display === "none";
-        graticule.style.display = isShown ? "block" : "none";
-        model.set("graticule", isShown);
-        model.save_changes();
-        graticuleButton.textContent = `Toggle Graticule${isShown ? " ✓" : ""}`;
-      }
-    });
-    menuContent.appendChild(graticuleButton);
 
     el.appendChild(menuContent);
 
@@ -154,10 +151,15 @@ async function render({ model, el }) {
   svg.setAttribute("viewBox", "0 0 960 500");
   svg.setAttribute("width", "960");
   svg.setAttribute("height", "500");
+  svg.setAttributeNS(
+    "http://www.w3.org/2000/xmlns/",
+    "xmlns:inkscape",
+    INKSCAPE_NS,
+  );
   const sphere = document.createElementNS("http://www.w3.org/2000/svg", "path");
   sphere.setAttribute("fill", "none");
   sphere.setAttribute("stroke", border ? "black" : "none");
-  svg.appendChild(sphere);
+  svg.appendChild(namedGroup("Border")).appendChild(sphere);
 
   let naturalEarth = null;
   if (basemap === "naturalearth") {
@@ -167,22 +169,97 @@ async function render({ model, el }) {
     );
     naturalEarth.setAttribute("fill", "none");
     naturalEarth.setAttribute("stroke", "black");
-    svg.appendChild(naturalEarth);
+    svg.appendChild(namedGroup("Basemap")).appendChild(naturalEarth);
   }
 
-  const layerGroup = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "g",
-  );
-  svg.appendChild(layerGroup);
+  const graticuleGen = d3.geoGraticule();
+  const graticuleStep = model.get("graticule_step");
+  if (graticuleStep) graticuleGen.step(graticuleStep);
+  const graticuleExtent = model.get("graticule_extent");
+  if (graticuleExtent) graticuleGen.extent(graticuleExtent);
+  const graticuleStepMajor = model.get("graticule_step_major");
+  if (graticuleStepMajor) graticuleGen.stepMajor(graticuleStepMajor);
+  const graticuleStepMinor = model.get("graticule_step_minor");
+  if (graticuleStepMinor) graticuleGen.stepMinor(graticuleStepMinor);
+  const graticuleExtentMajor = model.get("graticule_extent_major");
+  if (graticuleExtentMajor) graticuleGen.extentMajor(graticuleExtentMajor);
+  const graticuleExtentMinor = model.get("graticule_extent_minor");
+  if (graticuleExtentMinor) graticuleGen.extentMinor(graticuleExtentMinor);
+  const graticulePrecision = model.get("graticule_precision");
+  if (graticulePrecision != null) graticuleGen.precision(graticulePrecision);
+  const emptyExtent = [
+    [0, 0],
+    [0, 0],
+  ];
+  const extentMinor = graticuleGen.extentMinor();
+  const graticuleMajorGeometry = graticuleGen.extentMinor(emptyExtent)();
+  graticuleGen.extentMinor(extentMinor).extentMajor(emptyExtent);
+  const graticuleMinorGeometry = graticuleGen();
+
+  function graticuleLine(name, style) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("id", name);
+    line.setAttributeNS(INKSCAPE_NS, "inkscape:label", name);
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke", style.stroke_color ?? "lightgray");
+    line.setAttribute("stroke-width", style.weight ?? 1);
+    line.setAttribute("stroke-opacity", style.stroke_opacity ?? 0.5);
+    if (style.hidden) line.style.display = "none";
+    return line;
+  }
+
+  let graticule = null;
+  let graticuleMajor = null;
+  let graticuleMinor = null;
+  if (model.get("graticule")) {
+    const graticuleStyle = model.get("graticule_style");
+    graticuleMajor = graticuleLine("major_graticule", {
+      ...graticuleStyle,
+      ...model.get("graticule_style_major"),
+    });
+    graticuleMinor = graticuleLine("minor_graticule", {
+      ...graticuleStyle,
+      ...model.get("graticule_style_minor"),
+    });
+    graticule = svg.appendChild(namedGroup("Graticule"));
+    graticule.appendChild(graticuleMinor);
+    graticule.appendChild(graticuleMajor);
+
+    // When the style hides both line sets, hide the group instead
+    if (
+      graticuleMajor.style.display === "none" &&
+      graticuleMinor.style.display === "none"
+    ) {
+      graticule.style.display = "none";
+      graticuleMajor.style.display = "";
+      graticuleMinor.style.display = "";
+    }
+
+    if (menuContent) {
+      const graticuleLabel = () =>
+        `Toggle Graticule${graticule.style.display === "none" ? "" : " ✓"}`;
+      const graticuleButton = document.createElement("div");
+      graticuleButton.textContent = graticuleLabel();
+      graticuleButton.addEventListener("click", () => {
+        graticule.style.display =
+          graticule.style.display === "none" ? "" : "none";
+        graticuleButton.textContent = graticuleLabel();
+      });
+      menuContent.appendChild(graticuleButton);
+    }
+  }
+
+  let layerGroups = [];
   function drawLayers() {
-    layerGroup.replaceChildren();
-    for (const layerData of model.get("layers")) {
-      if (layerData.type === "Raster") {
-        layerGroup.appendChild(renderRaster(layerData, projection));
-        continue;
+    for (const group of layerGroups) group.remove();
+    layerGroups = model.get("layers").map(({ name, data }, i) => {
+      const layerGroup = namedGroup(name || `Layer ${i + 1}`);
+      if (data.type === "Raster") {
+        layerGroup.appendChild(renderRaster(data, projection));
+        svg.insertBefore(layerGroup, graticule);
+        return layerGroup;
       }
-      for (const feature of layerData.features) {
+      for (const feature of data.features) {
         const style = feature.properties.__ipyd3geo_style__ || {};
         const layer = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -195,27 +272,24 @@ async function render({ model, el }) {
         layer.setAttribute("stroke-width", style.weight || 3);
         layer.setAttribute("stroke-opacity", style.stroke_opacity || 1.0);
         layer.setAttribute("fill-opacity", style.fill_opacity || 0.2);
+        if (style.hidden) layer.style.display = "none";
         layerGroup.appendChild(layer);
       }
-    }
+      svg.insertBefore(layerGroup, graticule);
+      return layerGroup;
+    });
   }
   model.on("change:layers", drawLayers);
-
-  let graticule = null;
-  if (model.get("graticule")) {
-    graticule = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    graticule.setAttribute("fill", "none");
-    graticule.setAttribute("stroke", "lightgray");
-    graticule.setAttribute("opacity", "0.5");
-    svg.appendChild(graticule);
-  }
 
   svg.style.border = "2px solid black";
 
   function redraw() {
     sphere.setAttribute("d", path({ type: "Sphere" }));
     if (naturalEarth) naturalEarth.setAttribute("d", path(countries));
-    if (graticule) graticule.setAttribute("d", path(d3.geoGraticule()()));
+    if (graticule) {
+      graticuleMajor.setAttribute("d", path(graticuleMajorGeometry));
+      graticuleMinor.setAttribute("d", path(graticuleMinorGeometry));
+    }
     drawLayers();
   }
   redraw();
