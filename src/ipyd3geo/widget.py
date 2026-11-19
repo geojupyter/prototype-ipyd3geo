@@ -23,9 +23,14 @@ class Map(anywidget.AnyWidget):
     """Defines a D3-Geo backed map widget for Jupyter notebooks.
 
     Args:
-        center (tuple): center of the map (longitude, latitude).
-            **Not implemented yet.**
-        zoom (float): The zoom level of the map. **Not implemented yet.**
+        center (tuple): center of the map (longitude, latitude). This is distinct
+            from but similar to the projection center. Essentially, it sets the center
+            in the same way as dynamic panning, and is supposed to be "easier"
+            to use for common cases. The centering behaviour
+            (pan vs rotate) is determined by the `dynamic` argument. If `dynamic`
+            is not set, the centering behaviour defaults to `pan`. **This will be
+            updated in a future release, please share your thoughts via GitHub Issues**
+        zoom (float): The zoom level of the map.
         projection (Projection or str): The projection to use for the map. If a
             string is provided, it will be used to create a Projection object.
             Defaults to "geoEqualEarth".
@@ -44,6 +49,10 @@ class Map(anywidget.AnyWidget):
 
     _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
 
+    zoom = traitlets.Float(1.0).tag(sync=True)
+    center = traitlets.Tuple(
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
+    ).tag(sync=True)
     projection = traitlets.Unicode("geoEqualEarth").tag(sync=True)
     border = traitlets.Bool(default_value=True).tag(sync=True)
     graticule = traitlets.Bool(default_value=False).tag(sync=True)
@@ -167,7 +176,7 @@ class Map(anywidget.AnyWidget):
     # apiece, which pushes the statement count past the limit.
     def __init__(  # noqa: PLR0913, PLR0915
         self,
-        center: tuple[float, float] = (0.0, 0.0),
+        center: tuple[float, float] | None = None,
         zoom: float = 1.0,
         projection: Projection | str | None = None,
         *,
@@ -177,13 +186,13 @@ class Map(anywidget.AnyWidget):
         hamburger: bool = True,
         dynamic: bool | str = True,
     ) -> None:
-        if center != (0.0, 0.0) or zoom != 1.0:
-            raise NotImplementedError
         if projection is None:
             projection = Projection()
         elif isinstance(projection, str):
             projection = Projection(projection)
         super().__init__()
+        self.center = center
+        self.zoom = zoom
         self.projection = projection.name
         self.projection_rotate = projection.rotate
         self.projection_center = projection.center
