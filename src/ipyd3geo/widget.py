@@ -46,7 +46,7 @@ class Map(anywidget.AnyWidget):
 
     zoom = traitlets.Float(1.0).tag(sync=True)
     center = traitlets.Tuple(
-        traitlets.Float(), traitlets.Float(), default_value=(0.0, 0.0)
+        traitlets.Float(), traitlets.Float(), allow_none=True, default_value=None
     ).tag(sync=True)
     projection = traitlets.Unicode("geoEqualEarth").tag(sync=True)
     border = traitlets.Bool(default_value=True).tag(sync=True)
@@ -171,7 +171,7 @@ class Map(anywidget.AnyWidget):
     # apiece, which pushes the statement count past the limit.
     def __init__(  # noqa: PLR0913, PLR0915
         self,
-        center: tuple[float, float] = (0.0, 0.0),
+        center: tuple[float, float] | None = None,
         zoom: float = 1.0,
         projection: Projection | str | None = None,
         *,
@@ -181,15 +181,13 @@ class Map(anywidget.AnyWidget):
         hamburger: bool = True,
         dynamic: bool | str = True,
     ) -> None:
-        self.center = center
-        self.zoom = zoom
-        if zoom != 1.0:
-            pass
         if projection is None:
             projection = Projection()
         elif isinstance(projection, str):
             projection = Projection(projection)
         super().__init__()
+        self.center = center
+        self.zoom = zoom
         self.projection = projection.name
         self.projection_rotate = projection.rotate
         self.projection_center = projection.center
