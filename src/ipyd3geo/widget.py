@@ -23,9 +23,14 @@ class Map(anywidget.AnyWidget):
     """Defines a D3-Geo backed map widget for Jupyter notebooks.
 
     Args:
-        center (tuple): center of the map (longitude, latitude).
-            **Not implemented yet.**
-        zoom (float): The zoom level of the map. **Not implemented yet.**
+        center (tuple): center of the map (longitude, latitude). This is distinct
+            from but similar to the projection center. Essentially, it sets the center
+            in the same way as dynamic panning, and is supposed to be "easier"
+            to use for common cases. The centering behaviour
+            (pan vs rotate) is determined by the `dynamic` argument. if `dynamic`
+            is not set, the centering behaviour defaults to `pan`. **This wil change
+            in a future release**
+        zoom (float): The zoom level of the map.
         projection (Projection or str): The projection to use for the map. If a
             string is provided, it will be used to create a Projection object.
             Defaults to "geoEqualEarth".
