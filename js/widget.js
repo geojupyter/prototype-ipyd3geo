@@ -104,6 +104,17 @@ async function render({ model, el }) {
   if (spacing != null) projection.spacing(spacing);
   const tilt = model.get("projection_tilt");
   if (tilt != null) projection.tilt(tilt);
+  const dynamic = model.get("dynamic");
+  projection.scale(projection.scale() * model.get("zoom"));
+  const viewCenter = model.get("center");
+  if (viewCenter && dynamic === "rotate") {
+    const [, , gamma] = projection.rotate();
+    projection.rotate([-viewCenter[0], -viewCenter[1], gamma]);
+  } else if (viewCenter) {
+    const [x, y] = projection(viewCenter);
+    const [tx, ty] = projection.translate();
+    projection.translate([tx + 480 - x, ty + 250 - y]);
+  }
   const path = d3.geoPath(projection);
   const baseScale = projection.scale();
   const baseTranslate = projection.translate();
@@ -252,7 +263,6 @@ async function render({ model, el }) {
   }
   redraw();
 
-  const dynamic = model.get("dynamic");
   if (dynamic !== "none") {
     let prev = { x: 0, y: 0 };
     const zoomBehavior = zoom().on("zoom", (event) => {
