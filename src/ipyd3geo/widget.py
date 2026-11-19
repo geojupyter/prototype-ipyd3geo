@@ -27,9 +27,9 @@ class Map(anywidget.AnyWidget):
             from but similar to the projection center. Essentially, it sets the center
             in the same way as dynamic panning, and is supposed to be "easier"
             to use for common cases. The centering behaviour
-            (pan vs rotate) is determined by the `dynamic` argument. if `dynamic`
-            is not set, the centering behaviour defaults to `pan`. **This wil change
-            in a future release**
+            (pan vs rotate) is determined by the `dynamic` argument. If `dynamic`
+            is not set, the centering behaviour defaults to `pan`. **This will be
+            updated in a future release, please share your thoughts via GitHub Issues**
         zoom (float): The zoom level of the map.
         projection (Projection or str): The projection to use for the map. If a
             string is provided, it will be used to create a Projection object.
